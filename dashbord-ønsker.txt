@@ -1,0 +1,29 @@
+driver skjerm:
+motortemp
+invertemp
+batteritemp
+batterikapasitet
+feilkoder OK / KRISE / LITEN FEIL
+lampe for apps, bspd, safetycircuit (kanskje r2d)
+
+Datapunkter:
+Trykk bremser forran/bak
+Motortemp
+invertertemp
+batteritemp
+state of charge
+batterispenning
+12v spenning
+safety-circuit
+pedalposition sensor1 og 2
+shutdown circuit
+imd status
+r2d
+inverter state
+ts
+
+Logg egen skjerm.
+
+
+162 b'\xf0\xd8\xf0\xd8\xcd\x00\x00\x00'
+{'D1_RTD4_Temperature': -1000.0, 'D2_RTD5_Temperature': -1000.0, 'D3_Motor_Temperature': 20.5, 'D4_Torque_Shudder': 0.0}
