@@ -32,7 +32,7 @@ class FakeCan(threading.Thread):
 
     def simulate_can(self):
         msg = self.canbus_file.readline()
-        time.sleep(0.0001)
+        time.sleep(0.00001)
         msg = re.split(r'\s+', msg)
         msg_ar = msg[1].split("#")
         ts = msg[0]
@@ -100,7 +100,7 @@ class AR23CAN(threading.Thread):
 ########## SOC #################
         if(id == 1712):
             #print(decoded_data)
-            pygame.event.post(pygame.event.Event(UPDATE_BATTERY, data=decoded_data["Pack_SOC"]))
+            pygame.event.post(pygame.event.Event(UPDATE_BATTERY, data=[decoded_data["Pack_SOC"], decoded_data["Pack_Inst_Voltage"]]))
 ########## TEMPS ###############
         elif(id == 1713):
             pygame.event.post(pygame.event.Event(UPDATE_BATTERY_TEMP, data=decoded_data["High_Temperature"]))
@@ -115,6 +115,8 @@ class AR23CAN(threading.Thread):
                 pygame.event.post(pygame.event.Event(UPDATE_R2D, data=True))
             else:
                 pygame.event.post(pygame.event.Event(UPDATE_R2D, data=False))
+        elif(id == 403106292):
+            pygame.event.post(pygame.event.Event(UPDATE_CELL_VOLTAGE, data=decoded_data["Maximum_Cell_Voltage"]))
         else:
             pass
             #print("Not yet implemented")

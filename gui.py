@@ -22,10 +22,13 @@ class UI:
             "SFTY": True
         }
         self.data = {
-            "motor_temp": "- ",
-            "inverter_temp": "- ",
-            "battery_temp": "- ",
+            "motor_temp": [0, "C"],
+            "inverter_temp": [0, "C"],
+            "battery_temp": [0, "C"],
+            "high_voltage": [0, "V"],
+            "battery_soc": [0, "%"]
         }
+        self.log = ["Normal operation."]
         #self.tabs =  ["driver", "data", "logs"]
         self.current_window = -1
         #switches from -1 to 0, to enter driver screen
@@ -46,6 +49,7 @@ class UI:
             case 2:
                 self.update_banner()
                 self.update_lamps()
+                self.update_logging_screen()
             case _:
                 self.update_banner()
                 self.update_lamps()
@@ -58,6 +62,7 @@ class UI:
         self.font = pygame.font.Font(None, 128)
         self.font_small = pygame.font.Font(None, 64)
         self.font_xsmall = pygame.font.Font(None, 48)
+        self.font_xxsmall = pygame.font.Font(None, 32)
 
     # Initializes the progress bars on each side of the screen
     def init_battery_status(self):
@@ -76,7 +81,7 @@ class UI:
         self.update_battery_status()
 
     def update_battery_status(self):
-        percentage = self.last_battery_state
+        percentage = self.data["battery_soc"][0]
         # avoids some bugs
         if percentage < 0 or percentage > 100 or self.current_window>0:
             return
@@ -101,9 +106,9 @@ class UI:
         text_display = pygame.Rect((self.screen.get_width()/12,self.screen.get_height()*3/12), (self.screen.get_width()*7/11, self.screen.get_height()*4/6))
         pygame.draw.rect(self.screen, pygame.Color("light gray"), text_display )
 
-        battery_text = self.font_xsmall.render("BATTERY TEMP: " + str(self.data["battery_temp"]) + "C", True, pygame.Color("black"))
-        inverter_text = self.font_xsmall.render("INVERTER TEMP: " + str(self.data["inverter_temp"]) + "C", True, pygame.Color("black"))
-        motor_text = self.font_xsmall.render("MOTOR TEMP: " + str(self.data["motor_temp"]) + "C", True, pygame.Color("black"))
+        battery_text = self.font_xsmall.render("BATTERY TEMP: " + str(self.data["battery_temp"][0]) + "C", True, pygame.Color("black"))
+        inverter_text = self.font_xsmall.render("INVERTER TEMP: " + str(self.data["inverter_temp"][0]) + "C", True, pygame.Color("black"))
+        motor_text = self.font_xsmall.render("MOTOR TEMP: " + str(self.data["motor_temp"][0]) + "C", True, pygame.Color("black"))
 
         text_height = battery_text.get_rect().height
         self.screen.blit(battery_text, (text_display.x, text_display.y+text_height*2))
@@ -162,13 +167,36 @@ class UI:
         screen_width = self.screen.get_width()
         screen_height = self.screen.get_height()
         info_screen_rect = pygame.Rect((screen_width*0.025,screen_height*1/6+screen_height*5/6*0.025), (screen_width*0.95,screen_height*5/6*0.95))
-
+        pygame.draw.rect(self.screen, pygame.Color("light gray"), info_screen_rect)
         ################## HERE COMES THE DATA HANDLING ###############
+        x = 0
+        y = 0
+        text_height = self.font_xxsmall.render("q", False, pygame.Color("black")).get_rect().height
+        for data_point in self.data:
+            new_string = data_point.replace("_", " ").capitalize()
+            data_text = self.font_xxsmall.render(new_string+": "+str(self.data[data_point][0])+self.data[data_point][1], True, pygame.Color("black"))
+            self.screen.blit(data_text, (info_screen_rect.x+(x*screen_width/2), info_screen_rect.y+text_height*(y+1)))
+            y += 1
+            if y>12:
+                y = 0
+                x += 1
+################ LOGGING SCREEN ######################
+    def update_logging_screen(self):
+        if self.current_window != 2: return
+        screen_width = self.screen.get_width()
+        screen_height = self.screen.get_height()
+        log_screen_rect = pygame.Rect((screen_width*0.025,screen_height*1/6+screen_height*5/6*0.025), (screen_width*0.95,screen_height*5/6*0.95))
+        pygame.draw.rect(self.screen, pygame.Color("light gray"), log_screen_rect)
+        y = 1
+        log_text = self.font_xsmall.render("Log:", False, pygame.Color("black"))
+        text_height = log_text.get_rect().height
+        self.screen.blit(log_text,(log_screen_rect.x, log_screen_rect.y))
+        for line in self.log:
+            log_text = self.font_xsmall.render(line, True, pygame.Color("black"))
+            self.screen.blit(log_text, (log_screen_rect.x, log_screen_rect.y+text_height*y))
+            y += 1
+            
         
-
-
-
-        pygame.draw.rect(self.screen, pygame.Color("white"), info_screen_rect)
 
 
     def main_loop(self):
@@ -179,20 +207,28 @@ class UI:
                     self.update_lamps()
                 elif event.type == UPDATE_BATTERY: 
                     #print(event.data)
-                    self.last_battery_state = event.data
+                    self.data["battery_soc"][0] = event.data[0]
+                    self.data["high_voltage"][0] = event.data[1]
                     self.update_battery_status()
+                    self.update_driver_data()
                 elif event.type == UPDATE_BATTERY_TEMP:
                     #print(event.data)
-                    self.data["battery_temp"] = event.data
+                    self.data["battery_temp"][0] = event.data
                     self.update_driver_data()
                     self.update_data_screen()
                 elif event.type == UPDATE_MOTOR_TEMP:
-                    self.data["motor_temp"] = event.data
+                    self.data["motor_temp"][0] = event.data
                     self.update_driver_data()
                     self.update_data_screen()
                 elif event.type == UPDATE_INVERTER_TEMP:
-                    self.data["inverter_temp"] = event.data
+                    self.data["inverter_temp"][0] = event.data
                     self.update_driver_data()
+                    self.update_data_screen()
+                elif event.type == UPDATE_INVERTER_PCB_TEMP:
+                    self.data["inverter_pcb_temp"][0] = event.data
+                    self.update_data_screen()
+                elif event.type == UPDATE_CELL_VOLTAGE:
+                    self.data["cell_voltage"][0] = event.data
                     self.update_data_screen()
                 elif event.type == pygame.QUIT: 
                     self.can_io.stop_process()
