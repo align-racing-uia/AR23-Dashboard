@@ -1,3 +1,4 @@
+from base64 import decode
 import cantools
 import re
 import time
@@ -117,6 +118,8 @@ class AR23CAN(threading.Thread):
                 pygame.event.post(pygame.event.Event(UPDATE_R2D, data=False))
         elif(id == 403106292):
             pygame.event.post(pygame.event.Event(UPDATE_CELL_VOLTAGE, data=decoded_data["Maximum_Cell_Voltage"]))
+        elif(id == 176):
+            pygame.event.post(pygame.event.Event(UPDATE_BUS, data=decoded_data["Fast_DC_Bus_Voltage"]))
         else:
             pass
             #print("Not yet implemented")
