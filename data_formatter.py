@@ -1,5 +1,5 @@
-raw_file = open("candump_raw.trc")
-nice_file = open("formatted_data.trc", "w")
+raw_file = open("candump.log")
+nice_file = open("formatted_data.log", "w")
 
 for line in raw_file:
     if line[0] == ";":
