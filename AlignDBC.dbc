@@ -34,7 +34,13 @@ NS_ :
 BS_: 
 BU_: AlignBus 
 BO_ 377 APPS: 8 AlignBus
-   SG_ ReadyToDrive : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ ReadyToDrive : 7|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ ShutdownCircuit : 6|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ BrakeImplosibility : 5|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ Deviation : 4|1@1+ (1,0) [0|1] "" Vector__XXX
+   SG_ BrakePressure : 8|16@1+ (0.1,0) [0|2500] "bar" Vector__XXX
+   SG_ Sensor1 : 24|8@1+ (1,0) [0|2500] "%" Vector__XXX
+   SG_ Sensor2 : 32|8@1+ (1,0) [0|2500] "%" Vector__XXX
 
 BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
 BA_DEF_ BO_ "GenMsgForegroundColor" STRING ;
@@ -45,5 +51,7 @@ BA_DEF_DEF_ "GenMsgBackgroundColor" "#ffffff";
 BA_DEF_DEF_ "GenMsgForegroundColor" "#000000";
 BA_DEF_DEF_ "isj1939dbc" 0;
 CM_ BO_ 377 "APPS message";
-CM_ SG_ 377 ReadyToDrive "Ready_to_drive_signal,_1_on_0_off";
-VAL_ 377 ReadyToDrive 0 "No Description";
+CM_ SG_ 377 ReadyToDrive "Ready_to_drive_state";
+CM_ SG_ 377 ShutdownCircuit "Shutdown_circuit_state";
+CM_ SG_ 377 BrakeImplosibility "BSPD_function_triggered,_let_off_the_throtle_to_restart";
+CM_ SG_ 377 Deviation "Deviation_error,_cycle_R2D_to_reset";

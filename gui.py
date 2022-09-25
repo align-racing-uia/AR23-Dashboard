@@ -25,6 +25,8 @@ class UI:
             "BSPD": True,
             "SFTY": True
         }
+        self.current_throttle = 0
+        self.current_brake = 0
         self.data = {
             "Motor_Temp": [0, "C"],
             "Inverter_Temp": [0, "C"],
@@ -32,7 +34,6 @@ class UI:
             "Battery_Voltage": [0, "V"],
             "Battery_SOC": [0, "%"],
             "Inverter_LV": [0, "V"],
-            "Motor_Power": [40, "%"],
             "Motor_Speed": [0, "RPM"],
             "Wheel_Speed": [0,"km/t"],
             "Throttle": [0, "%"],
@@ -64,7 +65,7 @@ class UI:
             case _:
                 self.update_banner()
                 self.update_lamps()
-                self.init_battery_status()
+                self.init_brake_status()
                 self.init_driver_data()
                 self.init_throttle_status()
                 self.update_throttle_status()
@@ -77,64 +78,74 @@ class UI:
         self.font_small = pygame.font.Font(None, 64)
         self.font_xsmall = pygame.font.Font(None, 48)
         self.font_xxsmall = pygame.font.Font(None, 32)
+        self.font_xxxsmall = pygame.font.Font(None, 24)
 
     # Initializes the progress bars on each side of the screen
-    def init_battery_status(self):
-        self.battery_status_container_rect = pygame.Rect((0,0), (self.screen.get_width()/6, (self.screen.get_height()*5/6)*6/8))
-        self.battery_status_container_rect.centery = self.screen.get_height()/2 + self.screen.get_height()/6/2
-        self.battery_status_container_rect.centerx = self.screen.get_width() -(self.screen.get_width()-self.screen.get_width()*2/3)/3
-        battery_status_container_glow = pygame.Rect((0,0), ((self.battery_status_container_rect.width)*104/100, (self.battery_status_container_rect.height)*102/100))
-        battery_status_container_glow.centerx = self.battery_status_container_rect.centerx
-        battery_status_container_glow.centery = self.battery_status_container_rect.centery
+    def init_brake_status(self):
+        self.brake_status_container_rect = pygame.Rect((0,0), (self.screen.get_width()/8, (self.screen.get_height()*5/6)*6/8))
+        self.brake_status_container_rect.centery = self.screen.get_height()/2 + self.screen.get_height()/6/2
+        self.brake_status_container_rect.centerx = (self.screen.get_width()-self.screen.get_width()*2/3)/4
+        brake_status_container_glow = pygame.Rect((0,0), ((self.brake_status_container_rect.width)*104/100, (self.brake_status_container_rect.height)*102/100))
+        brake_status_container_glow.centerx = self.brake_status_container_rect.centerx
+        brake_status_container_glow.centery = self.brake_status_container_rect.centery
 
-        # Text under battery
-        # battery_text = self.font_xsmall.render("BATTERY", True, HIGHVIS)
-        # battery_text_rect = battery_text.get_rect()
-        # battery_text_rect.centerx = self.battery_status_container_rect.centerx
-        # battery_text_rect.centery = self.battery_status_container_rect.centery + self.battery_status_container_rect.height/2 + battery_text_rect.height #-self.screen.get_height()/40
-        # self.screen.blit(battery_text, battery_text_rect)
+        #Text over brake
+        brake_text = self.font_xsmall.render("BRK", True, HIGHVIS)
+        brake_text_rect = brake_text.get_rect()
+        brake_text_rect.y = brake_status_container_glow.y-brake_text_rect.height
+        brake_text_rect.centerx = self.brake_status_container_rect.centerx
+        self.screen.blit(brake_text, brake_text_rect)
 
-        pygame.draw.rect(self.screen, HIGHVIS, battery_status_container_glow)
-        pygame.draw.rect(self.screen, CONTAINER, self.battery_status_container_rect)
-        self.update_battery_status()
+        pygame.draw.rect(self.screen, HIGHVIS, brake_status_container_glow)
+        pygame.draw.rect(self.screen, CONTAINER, self.brake_status_container_rect)
+        self.update_brake_status()
 
-    def update_battery_status(self):
-        percentage = self.data["Brake_Pressure"][0]/9*100
+    def update_brake_status(self):
+        brake = round(self.data["Brake_Pressure"][0]/9*100)
+
+        if brake-self.current_brake != 0:
+            self.current_brake += (brake-self.current_brake)*(1-abs(brake-self.current_brake)/100)*1/100       
+
+        percentage = self.current_brake
         # avoids some bugs
         if percentage < 0 or percentage > 100 or self.current_window>0:
             return
 
         # clears the old green from the battery container
-        pygame.draw.rect(self.screen, CONTAINER, self.battery_status_container_rect)
+        pygame.draw.rect(self.screen, CONTAINER, self.brake_status_container_rect)
 
         # draws the green box inside the battery container, and places it at the bottom
-        self.battery_status_rect = pygame.Rect((0,0), (self.battery_status_container_rect.width*85/100,self.battery_status_container_rect.height*19/20*percentage/100))
-        self.battery_status_rect.centery = self.battery_status_container_rect.centery + (self.battery_status_container_rect.height*19/20/2) * (100-percentage)/100
-        self.battery_status_rect.centerx = self.battery_status_container_rect.centerx
+        self.brake_status_rect = pygame.Rect((0,0), (self.brake_status_container_rect.width*85/100,self.brake_status_container_rect.height*19/20*percentage/100))
+        self.brake_status_rect.centery = self.brake_status_container_rect.centery + (self.brake_status_container_rect.height*19/20/2) * (100-percentage)/100
+        self.brake_status_rect.centerx = self.brake_status_container_rect.centerx
 
-        pygame.draw.rect(self.screen, POWER, self.battery_status_rect)
+        pygame.draw.rect(self.screen, POWER, self.brake_status_rect)
     
     def init_throttle_status(self):
-        self.throttle_status_container_rect = pygame.Rect((0,0), (self.screen.get_width()/6, (self.screen.get_height()*5/6)*6/8))
+        self.throttle_status_container_rect = pygame.Rect((0,0), (self.screen.get_width()/8, (self.screen.get_height()*5/6)*6/8))
         self.throttle_status_container_rect.centery = self.screen.get_height()/2 + self.screen.get_height()/6/2
-        self.throttle_status_container_rect.centerx = self.screen.get_width() -(self.screen.get_width()-self.screen.get_width()*2/3)/3 - self.throttle_status_container_rect.width * 11/10
+        self.throttle_status_container_rect.centerx = self.screen.get_width() -(self.screen.get_width()-self.screen.get_width()*2/3)/4
         throttle_status_container_glow = pygame.Rect((0,0), ((self.throttle_status_container_rect.width)*104/100, (self.throttle_status_container_rect.height)*102/100))
         throttle_status_container_glow.centerx = self.throttle_status_container_rect.centerx
         throttle_status_container_glow.centery = self.throttle_status_container_rect.centery
 
-        # Text under power
-        # power_text = self.font_xsmall.render("power", True, HIGHVIS)
-        # power_text_rect = power_text.get_rect()
-        # power_text_rect.centerx = self.power_status_container_rect.centerx
-        # power_text_rect.centery = self.power_status_container_rect.centery + self.power_status_container_rect.height/2 + power_text_rect.height #-self.screen.get_height()/40
-        # self.screen.blit(power_text, power_text_rect)
+        #Text over throttle
+        throttle_text = self.font_xsmall.render("THR", True, HIGHVIS)
+        throttle_text_rect = throttle_text.get_rect()
+        throttle_text_rect.y = throttle_status_container_glow.y-throttle_text_rect.height
+        throttle_text_rect.centerx = self.throttle_status_container_rect.centerx
+        self.screen.blit(throttle_text, throttle_text_rect)
 
         pygame.draw.rect(self.screen, HIGHVIS, throttle_status_container_glow)
         pygame.draw.rect(self.screen, CONTAINER, self.throttle_status_container_rect)
         self.update_throttle_status()
 
     def update_throttle_status(self):
-        percentage = self.data["Throttle"][0]
+
+        if self.data["Throttle"][0]-self.current_throttle != 0:
+            self.current_throttle += (self.data["Throttle"][0]-self.current_throttle)*(1-abs(self.data["Throttle"][0]-self.current_throttle)/100)*1/100
+
+        percentage = self.current_throttle
         # avoids some bugs
         if percentage < 0 or percentage > 100 or self.current_window>0:
             return
@@ -149,22 +160,66 @@ class UI:
 
         pygame.draw.rect(self.screen, OK, self.throttle_status_rect)
 
-    def draw_gauge(self, center, text_input, data, max):
+    def draw_gauge(self, center, text_input, data, max, min=0, invert=False):
         radius = self.screen.get_height()/6
 
-        pygame.draw.circle(self.screen, HIGHVIS, center, radius*104/100)
-        pygame.draw.circle(self.screen, CONTAINER, center, radius)
+        text_color = GAUGE_TEXT
 
-        unit = self.font_xxsmall.render(data[1], True, pygame.Color(170,170,170))
+        if data[0]/max > 75/100 and not invert:
+            pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
+            pygame.draw.circle(self.screen, ALERT, center, radius)
+            text_color = pygame.Color("black")
+        elif data[0]/max < 25/100 and invert:
+
+            pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
+            pygame.draw.circle(self.screen, ALERT, center, radius)
+            text_color = pygame.Color("black")
+        else:
+            pygame.draw.circle(self.screen, HIGHVIS, center, radius*104/100)
+            pygame.draw.circle(self.screen, CONTAINER, center, radius)
+
+        
+        unit = self.font_xxsmall.render(data[1], True, text_color)
         unit_rect = unit.get_rect()
         unit_rect.centerx = center[0]
         unit_rect.centery = center[1] + radius*4/5
-        text = self.font_xxsmall.render(text_input, True, pygame.Color(170,170,170))
+        text = self.font_xxsmall.render(text_input, True, text_color)
         text_rect = text.get_rect()
         text_rect.centerx = center[0]
         text_rect.centery = center[1] + radius/2
+
+        min_text = self.font_xxxsmall.render(str(min)+data[1], True, text_color)
+        min_text_rect = min_text.get_rect()
+        min_text_rect.x = center[0]-radius*0.9
+        min_text_rect.centery = center[1]+min_text_rect.height
+
+        max_text = self.font_xxxsmall.render(str(max)+data[1], True, text_color)
+        max_text_rect = max_text.get_rect()
+        max_text_rect.x = center[0]+radius*0.9 - max_text_rect.width
+        max_text_rect.centery = center[1]+max_text_rect.height
+
+        self.screen.blit(min_text,min_text_rect)
+        self.screen.blit(max_text,max_text_rect)
         self.screen.blit(text, text_rect)
         self.screen.blit(unit, unit_rect)
+
+        for i in range(0,13):
+            angle = 180/12 * i
+            factor = 0.8
+            if angle % 45 == 0:
+                factor = 0.7
+
+            color = text_color
+            if not invert and angle > 140:
+                color = pygame.Color("red")
+            if invert and angle < 40:
+                color = pygame.Color("red")
+
+            base = pointer_tip = (center[0]-(radius*factor*math.cos(math.radians(angle))), 
+            center[1]-(radius*factor*math.sin(math.radians(angle))))
+            tip = pointer_tip = (center[0]-(radius*0.9*math.cos(math.radians(angle))), 
+            center[1]-(radius*0.9*math.sin(math.radians(angle))))
+            pygame.draw.line(self.screen, color, base, tip, 2)
 
         angle = data[0]/max * 180
         pointer_tip = (center[0]-(radius*0.9*math.cos(math.radians(angle))), 
@@ -181,17 +236,20 @@ class UI:
         if(self.current_window>0): return
         #text_display = pygame.Rect((self.screen.get_width()/12,self.screen.get_height()*3/12), (self.screen.get_width()*7/11, self.screen.get_height()*4/6))
         text_display = pygame.Rect((0,0), (self.screen.get_width()*3/5, self.screen.get_height()*6/10))
-        text_display.centery = self.battery_status_container_rect.centery
+        text_display.centery = self.brake_status_container_rect.centery
+        text_display.centerx = self.screen.get_width()/2
         #pygame.draw.rect(self.screen, HIGHVIS, text_display )
 
         top_box = pygame.Rect((0,text_display.y), (text_display.width*199/200, (text_display.height/3)*96/100))
         #battery_box.centerx = text_display.centerx
         top_box.centery = text_display.y + text_display.height/6 + (text_display.height/3)*2/100
+        top_box.centerx = text_display.centerx
         #pygame.draw.rect(self.screen, CONTAINER, battery_box)
 
         bottom_box = pygame.Rect((0,text_display.y), (text_display.width*199/200, (text_display.height/3)*96/100))
         #battery_box.centerx = text_display.centerx
         bottom_box.centery = text_display.y + text_display.height*5/6 - (text_display.height/3)*1/100
+        bottom_box.centerx = text_display.centerx
         #pygame.draw.rect(self.screen, CONTAINER, motor_box)
 
         
@@ -205,11 +263,14 @@ class UI:
         # motor_rect.centerx = motor_box.centerx-text_display.width*1/400
 
         radius = self.screen.get_height()/6
-        self.draw_gauge((top_box.centerx/2,top_box.centery), "Inverter",self.data["Inverter_Temp"], 70)
-        self.draw_gauge((top_box.centerx*3/2,top_box.centery), "Motor",self.data["Motor_Temp"], 70)
+        self.draw_gauge((top_box.centerx-bottom_box.width*3/8,top_box.centery), "Inverter",self.data["Inverter_Temp"], 70)
+        self.draw_gauge((top_box.centerx+bottom_box.width*3/8,top_box.centery), "Motor",self.data["Motor_Temp"], 70)
 
-        self.draw_gauge((bottom_box.centerx/2,bottom_box.centery), "Battery",self.data["Battery_Temp"], 70)
-        self.draw_gauge((bottom_box.centerx*3/2,bottom_box.centery), "Charge",self.data["Battery_SOC"], 100)
+        self.draw_gauge((top_box.centerx,top_box.centery), "Inverter",self.data["Inverter_Temp"], 70)
+        self.draw_gauge((bottom_box.centerx,bottom_box.centery), "Motor",self.data["Motor_Temp"], 70)
+
+        self.draw_gauge((bottom_box.centerx-bottom_box.width*3/8,bottom_box.centery), "Battery",self.data["Battery_Temp"], 70)
+        self.draw_gauge((bottom_box.centerx+bottom_box.width*3/8,bottom_box.centery), "Battery",self.data["Battery_SOC"], 100, 0, True)
 
 
         # self.screen.blit(battery_text, battery_rect)
@@ -228,7 +289,7 @@ class UI:
             lamp_background_rect.x = self.screen.get_width() - lamp_background_rect.width - (offset*lamp_background_rect.width)
             pygame.draw.rect(self.screen, TEXT, lamp_background_rect)
             lamp_rect = pygame.Rect((0,0), (self.screen.get_width()*1/6*95/100, self.screen.get_height()*1/6))
-            lamp_rect.centerx = lamp_background_rect.centerx
+            lamp_rect.x= lamp_background_rect.x+self.screen.get_width()*1/6*5/100
             lamp_rect.centery = lamp_background_rect.centery
             if self.lamps[i]:
                 pygame.draw.rect(self.screen, OK, lamp_rect)
@@ -304,22 +365,25 @@ class UI:
         while True:
             self.clock.tick()
             #print(self.clock.get_fps())
-            print("tick")
+            #print("tick")
+            if(self.current_throttle != self.data["Throttle"][0]):
+                self.update_throttle_status()
+            if(self.current_throttle != round(self.data["Brake_Pressure"][0]/9*100)):
+                self.update_brake_status()
             for event in pygame.event.get():
-                print("event: " + str(event.type))
+                #print("event: " + str(event.type))
                 if event.type == UPDATE_APPS:
                     self.lamps["R2D"] = event.data[0]
                     self.data["Throttle"][0] = event.data[1]
                     self.data["Brake_Pressure"][0] = event.data[2]
                     self.update_throttle_status()
-                    self.update_battery_status()
+                    self.update_brake_status()
                     self.update_driver_data()
                     self.update_lamps()
                 elif event.type == UPDATE_BATTERY: 
                     #print(event.data)
                     self.data["Battery_SOC"][0] = event.data[0]
                     self.data["Battery_Voltage"][0] = event.data[1]
-                    self.update_battery_status()
                     self.update_driver_data()
                 elif event.type == UPDATE_BATTERY_TEMP:
                     #print(event.data)
