@@ -10,6 +10,7 @@ ALERT = pygame.Color(255, 153, 0)
 OK = pygame.Color(153, 204, 0)#pygame.Color(51, 204, 51)
 POWER = pygame.Color(255, 102, 0)
 GAUGE_TEXT = pygame.Color(170,170,170)
+SHADOW = pygame.Color(35,35,35)
 
 UPDATE_LOG = pygame.USEREVENT
 UPDATE_APPS = pygame.USEREVENT+1
