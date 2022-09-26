@@ -1,10 +1,11 @@
 from base64 import decode
+from curses import baudrate
 import cantools
 import re
 import time
 import pygame
 import threading
-import math
+import can
 from pygameEvent import *
 
 #canbus_file = open("./data.trc")
@@ -53,6 +54,28 @@ class FakeCan(threading.Thread):
             self.simulate_can()
 
 
+class RealCan(threading.Thread):
+    def __init__(self,canname,can_reader):
+        threading.Thread.__init__(self)
+        self.canname = canname
+        self.can_reader = can_reader
+
+    def run(self):
+        filter=[
+            {"can_id": 0x6B0, "can_mask": 0xFFFFFF, "extended": False}
+        
+        ]
+        self.running = True
+        with can.Bus(interface="socketcan", channel="vcan0", can_filters=filter) as bus:
+            for msg in bus:
+                self.can_reader.can_queue.append([msg.arbitration_id,msg.data,msg.timestamp])
+                if not self.running:
+                    break
+    
+    def stop_process(self):
+        self.running = False
+
+
 # A class which reads, and processes the data from the CAN I/O and sends the UI events to deal with the data.
 class AR23CAN(threading.Thread):
 
@@ -68,6 +91,8 @@ class AR23CAN(threading.Thread):
         print("Initialized AR23CAN")
         if debug:
             self.can_io = FakeCan(filename,self)
+        else:
+            self.can_io = RealCan(filename, self)
         
     def run(self):
         print("Starting AR23CAN")
@@ -75,7 +100,7 @@ class AR23CAN(threading.Thread):
         self.can_io.start()
         while self.running:
             if len(self.can_queue)>0:
-                #print(len(self.can_queue))
+                print(len(self.can_queue))
                 self.proccess_can_data(*self.can_queue.pop(0))
             else:
                 #print("waiting")
