@@ -160,59 +160,86 @@ class UI:
 
         pygame.draw.rect(self.screen, OK, self.throttle_status_rect)
 
-    def draw_gauge(self, center, text_input, data, max, min=0, invert=False):
+    def draw_gauge(self, center, text_input, data, max, min=0, invert=False, degrees = 180):
         radius = self.screen.get_height()/6
 
         text_color = GAUGE_TEXT
 
         if data[0]/max > 75/100 and not invert:
+            pygame.draw.circle(self.screen, pygame.Color(35,35,35), (center[0], center[1]+6), radius*108/100)
             pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
             pygame.draw.circle(self.screen, ALERT, center, radius)
             text_color = pygame.Color("black")
         elif data[0]/max < 25/100 and invert:
-
+            pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
             pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
             pygame.draw.circle(self.screen, ALERT, center, radius)
             text_color = pygame.Color("black")
         else:
+            pygame.draw.circle(self.screen, pygame.Color(35,35,35), (center[0], center[1]+6), radius*108/100)
             pygame.draw.circle(self.screen, HIGHVIS, center, radius*104/100)
             pygame.draw.circle(self.screen, CONTAINER, center, radius)
 
-        
-        unit = self.font_xxsmall.render(data[1], True, text_color)
-        unit_rect = unit.get_rect()
-        unit_rect.centerx = center[0]
-        unit_rect.centery = center[1] + radius*4/5
-        text = self.font_xxsmall.render(text_input, True, text_color)
-        text_rect = text.get_rect()
-        text_rect.centerx = center[0]
-        text_rect.centery = center[1] + radius/2
 
-        min_text = self.font_xxxsmall.render(str(min)+data[1], True, text_color)
-        min_text_rect = min_text.get_rect()
-        min_text_rect.x = center[0]-radius*0.9
-        min_text_rect.centery = center[1]+min_text_rect.height
+        if degrees < 181:
+            unit = self.font_xxsmall.render(data[1], True, text_color)
+            unit_rect = unit.get_rect()
+            unit_rect.centerx = center[0]
+            unit_rect.centery = center[1] + radius*4/5
+            text = self.font_xxsmall.render(text_input, True, text_color)
+            text_rect = text.get_rect()
+            text_rect.centerx = center[0]
+            text_rect.centery = center[1] + radius/2
 
-        max_text = self.font_xxxsmall.render(str(max)+data[1], True, text_color)
-        max_text_rect = max_text.get_rect()
-        max_text_rect.x = center[0]+radius*0.9 - max_text_rect.width
-        max_text_rect.centery = center[1]+max_text_rect.height
+            min_text = self.font_xxxsmall.render(str(min)+data[1], True, text_color)
+            min_text_rect = min_text.get_rect()
+            min_text_rect.x = center[0]-radius*0.9
+            min_text_rect.centery = center[1]+min_text_rect.height
 
-        self.screen.blit(min_text,min_text_rect)
-        self.screen.blit(max_text,max_text_rect)
-        self.screen.blit(text, text_rect)
-        self.screen.blit(unit, unit_rect)
+            max_text = self.font_xxxsmall.render(str(max)+data[1], True, text_color)
+            max_text_rect = max_text.get_rect()
+            max_text_rect.x = center[0]+radius*0.9 - max_text_rect.width
+            max_text_rect.centery = center[1]+max_text_rect.height
+            self.screen.blit(min_text,min_text_rect)
+            self.screen.blit(max_text,max_text_rect)
+            self.screen.blit(text, text_rect)
+            self.screen.blit(unit, unit_rect)
+            
+        else:
+            # unit = self.font_xxsmall.render(data[1], True, text_color)
+            # unit_rect = unit.get_rect()
+            # unit_rect.centerx = center[0]
+            # unit_rect.centery = center[1] + radius*4/5
+            text = self.font_xxsmall.render(text_input, True, text_color)
+            text_rect = text.get_rect()
+            text_rect.centerx = center[0]
+            text_rect.centery = center[1] - radius*0.3
 
-        for i in range(0,13):
-            angle = 180/12 * i
+            min_text = self.font_xxxsmall.render(str(min)+data[1], True, text_color)
+            min_text_rect = min_text.get_rect()
+            min_text_rect.x = center[0]-radius*0.9
+            min_text_rect.centery = center[1]+min_text_rect.height
+
+            max_text = self.font_xxxsmall.render(str(max)+data[1], True, text_color)
+            max_text_rect = max_text.get_rect()
+            max_text_rect.centerx = center[0]
+            max_text_rect.centery = center[1]+radius*0.7-max_text_rect.height
+
+            self.screen.blit(min_text,min_text_rect)
+            self.screen.blit(max_text,max_text_rect)
+            self.screen.blit(text, text_rect)
+            #self.screen.blit(unit, unit_rect)
+
+        for i in range(0,round(degrees/15)+1):
+            angle = degrees/(degrees/15) * i
             factor = 0.8
             if angle % 45 == 0:
                 factor = 0.7
 
             color = text_color
-            if not invert and angle > 140:
+            if not invert and angle > degrees-degrees/4:
                 color = pygame.Color("red")
-            if invert and angle < 40:
+            if invert and angle < degrees/4:
                 color = pygame.Color("red")
 
             base = pointer_tip = (center[0]-(radius*factor*math.cos(math.radians(angle))), 
@@ -221,10 +248,11 @@ class UI:
             center[1]-(radius*0.9*math.sin(math.radians(angle))))
             pygame.draw.line(self.screen, color, base, tip, 2)
 
-        angle = data[0]/max * 180
+        angle = data[0]/max * degrees
         pointer_tip = (center[0]-(radius*0.9*math.cos(math.radians(angle))), 
             center[1]-(radius*0.9*math.sin(math.radians(angle))))
         pygame.draw.line(self.screen, pygame.Color("Red"), center, pointer_tip, 3)
+        
         
 
     # Shows all the temperatures on the driver page
@@ -252,22 +280,12 @@ class UI:
         bottom_box.centerx = text_display.centerx
         #pygame.draw.rect(self.screen, CONTAINER, motor_box)
 
-        
-        battery_text = self.font_xsmall.render("BATTERY: " + str(self.data["Battery_Temp"][0]) + "C", True, HIGHVIS)
-        inverter_text = self.font_xsmall.render("INVERTER: " + str(self.data["Inverter_Temp"][0]) + "C", True, HIGHVIS)
-        # motor_text = self.font_xsmall.render("MOTOR: " + str(self.data["Motor_Temp"][0]) + "C", True, HIGHVIS)
-
-
-        # motor_rect = motor_text.get_rect()
-        # motor_rect.centery = motor_box.centery
-        # motor_rect.centerx = motor_box.centerx-text_display.width*1/400
-
         radius = self.screen.get_height()/6
         self.draw_gauge((top_box.centerx-bottom_box.width*3/8,top_box.centery), "Inverter",self.data["Inverter_Temp"], 70)
         self.draw_gauge((top_box.centerx+bottom_box.width*3/8,top_box.centery), "Motor",self.data["Motor_Temp"], 70)
 
-        self.draw_gauge((top_box.centerx,top_box.centery), "Inverter",self.data["Inverter_Temp"], 70)
-        self.draw_gauge((bottom_box.centerx,bottom_box.centery), "Motor",self.data["Motor_Temp"], 70)
+        self.draw_gauge((top_box.centerx,top_box.centery), "",self.data["Motor_Speed"], 3000)
+        self.draw_gauge((bottom_box.centerx,bottom_box.centery), "Speed",self.data["Wheel_Speed"], 120, 0, False, 270)
 
         self.draw_gauge((bottom_box.centerx-bottom_box.width*3/8,bottom_box.centery), "Battery",self.data["Battery_Temp"], 70)
         self.draw_gauge((bottom_box.centerx+bottom_box.width*3/8,bottom_box.centery), "Battery",self.data["Battery_SOC"], 100, 0, True)
