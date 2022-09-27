@@ -69,6 +69,7 @@ class UI:
             self.update_endurance()
         else:
             self.init_driver_data()
+        pygame.display.flip()
                 
 
 
@@ -89,7 +90,7 @@ class UI:
 
         
         text_color = GAUGE_TEXT
-
+        gauge_rect = pygame.Rect((center[0]-radius,center[1]-radius), (radius*2,radius*2.2))
         if data[0]/max > 75/100 and not invert:
             pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
             pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
@@ -175,9 +176,13 @@ class UI:
             tip = pointer_tip = (center[0]-(radius*0.9*math.cos(math.radians(current_angle))), 
             center[1]-(radius*0.9*math.sin(math.radians(current_angle))))
             pygame.draw.line(self.screen, color, base, tip, 2)
-            pointer_tip = (center[0]-(radius*0.9*math.cos(math.radians(angle))), 
-                center[1]-(radius*0.9*math.sin(math.radians(angle))))
-            pygame.draw.line(self.screen, pygame.Color("Red"), center, pointer_tip, 3)
+
+        
+        pointer_tip = (center[0]-(radius*0.9*math.cos(math.radians(angle))), 
+            center[1]-(radius*0.9*math.sin(math.radians(angle))))
+        pygame.draw.line(self.screen, pygame.Color("Red"), center, pointer_tip, 3)
+
+        pygame.display.update(gauge_rect)
 
         
         
@@ -252,11 +257,13 @@ class UI:
             else:
                 pygame.draw.rect(self.screen, DANGER, lamp_rect)
             
+            
             lamp_text = self.font_xsmall.render(i, True, TEXT)
             lamp_text_rec = lamp_text.get_rect()
             lamp_text_rec.centerx = lamp_rect.centerx
             lamp_text_rec.centery = lamp_rect.centery
             self.screen.blit(lamp_text, lamp_text_rec)
+            pygame.display.update(lamp_background_rect)
 
             offset += 1
 
@@ -279,6 +286,7 @@ class UI:
         banner_text_rect = banner_text.get_rect()
         banner_text_rect.center = banner_rect.center
         self.screen.blit(banner_text, banner_text_rect)
+        pygame.display.update(banner_rect)
  ####################### DATA SCREEN ########################
     def update_data_screen(self):
         if self.current_window != 1: return
@@ -298,6 +306,7 @@ class UI:
             if y>12:
                 y = 0
                 x += 1
+        pygame.display.update(info_screen_rect)
 ################ LOGGING SCREEN ######################
     def update_logging_screen(self):
         if self.current_window != 3: return
@@ -313,6 +322,7 @@ class UI:
             log_text = self.font_xsmall.render(line, True, HIGHVIS)
             self.screen.blit(log_text, (log_screen_rect.x, log_screen_rect.y+text_height*y))
             y += 1
+            pygame.display.update(log_text.get_rect())
             
         
 
@@ -320,7 +330,7 @@ class UI:
     def main_loop(self):
         while True:
             self.clock.tick(60)
-            #print(self.clock.get_fps())
+            print(self.clock.get_fps())
             for event in pygame.event.get():
                 if event.type == UPDATE_APPS:
                     self.lamps["R2D"] = event.data[0]
@@ -354,5 +364,5 @@ class UI:
             self.update_lamps()
             self.update_data_screen()
             self.update_endurance()
-            pygame.display.flip()
+            #pygame.display.flip()
             

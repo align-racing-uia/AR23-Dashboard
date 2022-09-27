@@ -100,7 +100,7 @@ class AR23CAN(threading.Thread):
         self.can_io.start()
         while self.running:
             if len(self.can_queue)>0:
-                print(len(self.can_queue))
+                #print(len(self.can_queue))
                 self.proccess_can_data(*self.can_queue.pop(0))
             else:
                 #print("waiting")
