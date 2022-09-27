@@ -6,6 +6,7 @@ import time
 import pygame
 import threading
 import can
+import asyncio
 from pygameEvent import *
 
 #canbus_file = open("./data.trc")
@@ -61,12 +62,13 @@ class RealCan(threading.Thread):
         self.can_reader = can_reader
 
     def run(self):
-        filter=[
-            {"can_id": 0x6B0, "can_mask": 0xFFFFFF, "extended": False}
-        
-        ]
         self.running = True
-        with can.Bus(interface="socketcan", channel="vcan0", can_filters=filter) as bus:
+        # filter=[
+        #     {"can_id": 0x6B0, "can_mask": 0xFFFFFF, "extended": False}
+        
+        # ]
+        #with can.Bus(interface="socketcan", channel="vcan0", can_filters=filter) as bus:
+        with can.Bus(interface="socketcan", channel="vcan0") as bus:
             for msg in bus:
                 self.can_reader.can_queue.append([msg.arbitration_id,msg.data,msg.timestamp])
                 if not self.running:
@@ -126,16 +128,16 @@ class AR23CAN(threading.Thread):
 ########## SOC #################
         if(id == 1712):
             #print(decoded_data)
-            pygame.event.post(pygame.event.Event(UPDATE_BATTERY, data=[decoded_data["Pack_SOC"], round(decoded_data["Pack_Inst_Voltage"])]))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_BATTERY, data=[decoded_data["Pack_SOC"], round(decoded_data["Pack_Inst_Voltage"])]))
 ########## TEMPS ###############
         elif(id == 1713):
-            pygame.event.post(pygame.event.Event(UPDATE_BATTERY_TEMP, data=decoded_data["High_Temperature"]))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_BATTERY_TEMP, data=decoded_data["High_Temperature"]))
         elif(id == 162):
             #print(decoded_data)
-            pygame.event.post(pygame.event.Event(UPDATE_MOTOR_TEMP, data=round(decoded_data["D3_Motor_Temperature"],1)))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_MOTOR_TEMP, data=round(decoded_data["D3_Motor_Temperature"],1)))
         elif(id == 160):
             temp = (decoded_data["D1_Module_A"] + decoded_data["D2_Module_B"] + decoded_data["D3_Module_C"])/3
-            pygame.event.post(pygame.event.Event(UPDATE_INVERTER_TEMP, data=round(temp, 1)))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_INVERTER_TEMP, data=round(temp, 1)))
         elif(id == 377):
             R2D = False
             ShutdownCircuit = False
@@ -146,16 +148,73 @@ class AR23CAN(threading.Thread):
 
             Throttle = round((decoded_data["Sensor1"] + decoded_data["Sensor2"])/2,1)
             BrakePressure = round(decoded_data["BrakePressure"],1)
-            pygame.event.post(pygame.event.Event(UPDATE_APPS, data=[R2D, Throttle, BrakePressure, ShutdownCircuit]))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_APPS, data=[R2D, Throttle, BrakePressure, ShutdownCircuit]))
 
 
         elif(id == 403106292):
-            pygame.event.post(pygame.event.Event(UPDATE_CELL_VOLTAGE, data=decoded_data["Maximum_Cell_Voltage"]))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_CELL_VOLTAGE, data=decoded_data["Maximum_Cell_Voltage"]))
         elif(id == 169):
-            pygame.event.post(pygame.event.Event(UPDATE_INVERTER_12V, data=round(decoded_data["D4_Reference_Voltage_12_0"],1)))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_INVERTER_12V, data=round(decoded_data["D4_Reference_Voltage_12_0"],1)))
         elif(id == 165):
             # Wheelspeed = Motorspeed * 0.0314256
-            pygame.event.post(pygame.event.Event(UPDATE_MOTOR_SPEED, data=[decoded_data["D2_Motor_Speed"], round(decoded_data["D2_Motor_Speed"]*0.0314256)]))
+            pygame.fastevent.post(pygame.event.Event(UPDATE_MOTOR_SPEED, data=[decoded_data["D2_Motor_Speed"], round(decoded_data["D2_Motor_Speed"]*0.0314256)]))
         else:
             pass
             #print("Not yet implemented")
+
+async def get_canbus():
+        with can.Bus(interface="socketcan", channel="vcan0") as bus:
+            for msg in bus:
+                asyncio.run(handle_canbus(msg.arbitration_id,msg.data,msg.timestamp))
+
+async def handle_canbus(id, data):
+    db = ['./cascadia.dbc','./Orion_CANBUS.dbc', './AlignDBC.dbc']
+    i = 0
+    found = False
+    #print("Can message from: " + str(id))
+    decoded_data = {}
+    while i<len(db) and found == False:
+        try:
+            #print(id, data)
+            decoded_data = db[i].decode_message(id, data)
+            #print(decoded_data)
+            found = True
+        except:
+            i+=1 
+########## SOC #################
+    if(id == 1712):
+        #print(decoded_data)
+        pygame.fastevent.post(pygame.event.Event(UPDATE_BATTERY, data=[decoded_data["Pack_SOC"], round(decoded_data["Pack_Inst_Voltage"])]))
+########## TEMPS ###############
+    elif(id == 1713):
+        pygame.fastevent.post(pygame.event.Event(UPDATE_BATTERY_TEMP, data=decoded_data["High_Temperature"]))
+    elif(id == 162):
+        #print(decoded_data)
+        pygame.fastevent.post(pygame.event.Event(UPDATE_MOTOR_TEMP, data=round(decoded_data["D3_Motor_Temperature"],1)))
+    elif(id == 160):
+        temp = (decoded_data["D1_Module_A"] + decoded_data["D2_Module_B"] + decoded_data["D3_Module_C"])/3
+        pygame.fastevent.post(pygame.event.Event(UPDATE_INVERTER_TEMP, data=round(temp, 1)))
+    elif(id == 377):
+        R2D = False
+        ShutdownCircuit = False
+        if decoded_data["ReadyToDrive"]>0:
+            R2D = True
+        if decoded_data["ShutdownCircuit"]>0:
+            ShutdownCircuit = True
+
+        Throttle = round((decoded_data["Sensor1"] + decoded_data["Sensor2"])/2,1)
+        BrakePressure = round(decoded_data["BrakePressure"],1)
+        pygame.fastevent.post(pygame.event.Event(UPDATE_APPS, data=[R2D, Throttle, BrakePressure, ShutdownCircuit]))
+
+
+    elif(id == 403106292):
+        pygame.fastevent.post(pygame.event.Event(UPDATE_CELL_VOLTAGE, data=decoded_data["Maximum_Cell_Voltage"]))
+    elif(id == 169):
+        pygame.fastevent.post(pygame.event.Event(UPDATE_INVERTER_12V, data=round(decoded_data["D4_Reference_Voltage_12_0"],1)))
+    elif(id == 165):
+        # Wheelspeed = Motorspeed * 0.0314256
+        pygame.fastevent.post(pygame.event.Event(UPDATE_MOTOR_SPEED, data=[decoded_data["D2_Motor_Speed"], round(decoded_data["D2_Motor_Speed"]*0.0314256)]))
+    else:
+        pass
+        #print("Not yet implemented")
+                

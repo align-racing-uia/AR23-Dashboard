@@ -11,6 +11,7 @@ class UI:
     # The function that initializes everything
     def __init__(self, title, width, height, can_io):
         pygame.init()
+        pygame.fastevent.init()
         self.can_io = can_io
         self.clock = pygame.time.Clock()
         print("Initializing UI")
@@ -18,6 +19,7 @@ class UI:
         self.bg = BACKGROUND
         self.screen = pygame.display.set_mode(self.screen_size)
         pygame.display.set_caption(title)
+        self.filter_events()
         self.init_text()
         self.last_battery_state = 40
         self.lamps = {
@@ -81,16 +83,46 @@ class UI:
         self.font_xxsmall = pygame.font.Font(None, 32)
         self.font_xxxsmall = pygame.font.Font(None, 24)
 
+    def init_gauge(self, radius, center, invert, danger=False):
+        if danger and not invert:
+            pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
+            pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
+            pygame.draw.circle(self.screen, ALERT, center, radius)
+            text_color = pygame.Color("black")
+        elif danger and invert:
+            pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
+            pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
+            pygame.draw.circle(self.screen, ALERT, center, radius)
+            text_color = pygame.Color("black")
+        else:
+            pygame.draw.circle(self.screen, SHADOW, (center[0], center[1]+6), radius*108/100)
+            pygame.draw.circle(self.screen, HIGHVIS, center, radius*104/100)
+            pygame.draw.circle(self.screen, CONTAINER, center, radius)
+
     def draw_gauge(self, radius, center, text_input, data_name, max, min=0, invert=False, degrees = 180):
         data = self.data[data_name]
         if not data_name in self.current_gauges:
-            self.current_gauges[data_name] = 0
+            self.current_gauges[data_name] = True
 
-        self.current_gauges[data_name] = self.data[data_name][0]
-
+        if self.current_gauges[data_name]:
+            danger = data[0]/max > 75/100 or data[0]/max < 25/100
+            if data[0]/max > 75/100 and not invert:
+                pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
+                pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
+                pygame.draw.circle(self.screen, ALERT, center, radius)
+                text_color = pygame.Color("black")
+            elif data[0]/max < 25/100 and invert:
+                pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
+                pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
+                pygame.draw.circle(self.screen, ALERT, center, radius)
+                text_color = pygame.Color("black")
+            else:
+                self.init_gauge(radius, center, invert)
+        
+        self.current_gauges[data_name] = False
         
         text_color = GAUGE_TEXT
-        gauge_rect = pygame.Rect((center[0]-radius,center[1]-radius), (radius*2,radius*2.2))
+        #gauge_rect = pygame.Rect((center[0]-radius,center[1]-radius), (radius*2,radius*2.2))
         if data[0]/max > 75/100 and not invert:
             pygame.draw.circle(self.screen, pygame.Color(55,35,35), (center[0], center[1]+6), radius*108/100)
             pygame.draw.circle(self.screen, DANGER, center, radius*104/100)
@@ -182,7 +214,7 @@ class UI:
             center[1]-(radius*0.9*math.sin(math.radians(angle))))
         pygame.draw.line(self.screen, pygame.Color("Red"), center, pointer_tip, 3)
 
-        pygame.display.update(gauge_rect)
+        #pygame.display.update(gauge_rect)
 
         
         
@@ -192,11 +224,14 @@ class UI:
         if(self.current_window!=4): return
         screen_width = self.screen.get_width()
         screen_height = self.screen.get_height()
+        endurance_rect = pygame.Rect((0,screen_height/6), (screen_width, screen_height*5/6))
         self.draw_gauge(screen_width/6*0.85, (screen_width/6,screen_height/6+screen_height*5/6/3), "Motor", "Motor_Temp", 60)   
         self.draw_gauge(screen_width/6*0.85, (screen_width*3/6,screen_height/6+screen_height*5/6/3), "Speed", "Wheel_Speed", 120, 0, False, 270)   
         self.draw_gauge(screen_width/6*0.85, (screen_width*5/6,screen_height/6+screen_height*5/6/3), "Inverter", "Inverter_Temp", 60)
         self.draw_gauge(screen_width/9*0.85, (screen_width*2/6,screen_height/6+screen_height*7/12), "Battery", "Battery_Temp", 55, 0)
         self.draw_gauge(screen_width/9*0.85, (screen_width*4/6,screen_height/6+screen_height*7/12), "Battery", "Battery_SOC", 100, 0, True)
+        pygame.display.update(endurance_rect)
+
 
     def update_laptimes(self):
         if(self.current_window!=999): return
@@ -229,14 +264,16 @@ class UI:
 
 
         radius = self.screen.get_height()/6
-        self.draw_gauge(self.screen.get_height()/6,(top_box.centerx-bottom_box.width*3/8,top_box.centery), "Inverter","Inverter_Temp", 60)
-        self.draw_gauge(self.screen.get_height()/6,(top_box.centerx+bottom_box.width*3/8,top_box.centery), "Motor","Motor_Temp", 60)
+        self.draw_gauge(radius,(top_box.centerx-bottom_box.width*3/8,top_box.centery), "Inverter","Inverter_Temp", 60)
+        self.draw_gauge(radius,(top_box.centerx+bottom_box.width*3/8,top_box.centery), "Motor","Motor_Temp", 60)
 
-        self.draw_gauge(self.screen.get_height()/6,(top_box.centerx,top_box.centery), "","Motor_Speed", 3000)
-        self.draw_gauge(self.screen.get_height()/6,(bottom_box.centerx,bottom_box.centery), "Speed","Wheel_Speed", 120, 0, False, 270)
+        self.draw_gauge(radius,(top_box.centerx,top_box.centery), "","Motor_Speed", 3000)
+        self.draw_gauge(radius,(bottom_box.centerx,bottom_box.centery), "Speed","Wheel_Speed", 120, 0, False, 270)
 
-        self.draw_gauge(self.screen.get_height()/6,(bottom_box.centerx-bottom_box.width*3/8,bottom_box.centery), "Battery","Battery_Temp", 55)
-        self.draw_gauge(self.screen.get_height()/6,(bottom_box.centerx+bottom_box.width*3/8,bottom_box.centery), "Battery","Battery_SOC", 100, 0, True)
+        self.draw_gauge(radius,(bottom_box.centerx-bottom_box.width*3/8,bottom_box.centery), "Battery","Battery_Temp", 55)
+        self.draw_gauge(radius,(bottom_box.centerx+bottom_box.width*3/8,bottom_box.centery), "Battery","Battery_SOC", 100, 0, True)
+
+        pygame.display.update(text_display)
 
 
     # Initializes the lamps in the top right corner
@@ -307,6 +344,7 @@ class UI:
                 y = 0
                 x += 1
         pygame.display.update(info_screen_rect)
+
 ################ LOGGING SCREEN ######################
     def update_logging_screen(self):
         if self.current_window != 3: return
@@ -324,14 +362,19 @@ class UI:
             y += 1
             pygame.display.update(log_text.get_rect())
             
-        
+    def filter_events(self):
+        pygame.event.set_blocked(None)
+        for i in range(0,11):
+            pygame.event.set_allowed(pygame.USEREVENT+i)
+        pygame.event.set_allowed(pygame.KEYDOWN)
+        pygame.event.set_allowed(pygame.QUIT)
 
 
     def main_loop(self):
         while True:
             self.clock.tick(60)
             print(self.clock.get_fps())
-            for event in pygame.event.get():
+            for event in pygame.fastevent.get():
                 if event.type == UPDATE_APPS:
                     self.lamps["R2D"] = event.data[0]
                     self.data["Throttle"][0] = event.data[1]
@@ -364,5 +407,4 @@ class UI:
             self.update_lamps()
             self.update_data_screen()
             self.update_endurance()
-            #pygame.display.flip()
             
