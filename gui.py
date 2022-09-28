@@ -56,7 +56,40 @@ class DigitalGauge():
         self.pointer.angle = -self.max_angle*percentage
         self.text.text = str(new_data)+self.dataType
 
-    
+
+class AnalogGauge():
+    def __init__(self, x, y, radius, min, max, layers, batch, info_text="", backgroundColor = BACKGROUND, gaugeColor = CONTAINER, gaugeColor2 = DANGER, dataType="km/t", reverse = False, extended=False):
+        self.max = max
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.gaugeColor = gaugeColor
+        self.gaugeColor2 = gaugeColor2
+        self.dataType = dataType
+        self.reversed = reverse
+        self.pointer_holder = pyglet.shapes.Sector(x,y,radius, angle=math.pi, color=gaugeColor, group=layers[0], batch=batch)
+        self.hot = pyglet.shapes.Sector(x,y,radius, angle=math.pi/4, color=gaugeColor2, group=layers[1], batch=batch)
+        self.middle = pyglet.shapes.Sector(x,y,radius*8/10, angle=math.pi, color=backgroundColor, group=layers[2], batch=batch)
+        angle = 45
+        self.pointer = pyglet.shapes.Triangle(x, y-radius/30, 
+                                                x, y+radius/30, 
+                                                x-+radius*0.8, y,
+                                                color=HIGHVIS, group=layers[3], batch=batch)
+        self.tmin = pyglet.text.Label(str(min)+self.dataType, font_size=round(radius/8), anchor_y="top",anchor_x="left", x=x-radius, y=y, color=(*HIGHVIS,255), group=layers[2], batch=batch)
+        self.tmax = pyglet.text.Label(str(max)+self.dataType, font_size=round(radius/8), anchor_y="top",anchor_x="right", x=x+radius, y=y, color=(*HIGHVIS,255), group=layers[2], batch=batch)
+        self.tinfo = pyglet.text.Label(info_text, font_size=round(radius/5), anchor_x="center", anchor_y="top", x=x, y=y-radius*1/10, color=(*HIGHVIS,255), group=layers[2], batch=batch)
+
+    def update_pointer(self, new_data):
+        angle = round(new_data/self.max*180)
+        x = self.x
+        y = self.y
+        radius = self.radius
+        self.pointer.x = x-radius/30*math.cos(math.radians(angle+90))
+        self.pointer.x2 = x-radius/30*math.cos(math.radians(angle-90))
+        self.pointer.x3 = x-radius*0.8*math.cos(math.radians(angle))
+        self.pointer.y = y+radius/30*math.sin(math.radians(angle+90))
+        self.pointer.y2 = y+radius/30*math.sin(math.radians(angle-90))
+        self.pointer.y3 = y+radius*0.8*math.sin(math.radians(angle))
 
 class Banner(pyglet.shapes.Rectangle):
     def __init__(self,x,y,width,height,layers,batch):
@@ -84,9 +117,18 @@ class AR23GUI(pyglet.window.Window):
         self.data = {
             "speed": 0,
             "soc": 0,
+            "inverter_temp": 0,
+            "motor_temp": 0,
+
         }
         
-        self.last_data = {}
+        self.should_update = {
+            "speed": False,
+            "soc": False,
+            "inverter_temp": False,
+            "motor_temp": False,
+
+        }
 
         self.layers = [pyglet.graphics.OrderedGroup(0), pyglet.graphics.OrderedGroup(1), pyglet.graphics.OrderedGroup(2),pyglet.graphics.OrderedGroup(3)]
         self.default_batch = pyglet.graphics.Batch()
@@ -96,7 +138,7 @@ class AR23GUI(pyglet.window.Window):
         self.init_banner()
         self.init_lamps()
         self.init_endurance_screen()
-        pyglet.clock.schedule_interval(self.handle_can_io, 1/1500)
+        pyglet.clock.schedule_interval(self.handle_can_io, 1/120)
 
 
     def init_banner(self):
@@ -115,29 +157,39 @@ class AR23GUI(pyglet.window.Window):
     def init_endurance_screen(self):
         screen_batch = self.batches[0]
         self.speed_gauge = DigitalGauge(self.width/2, self.height*5/12, self.width/6, 0, 120, self.layers, screen_batch, extended=True)
-        self.motor_temp = DigitalGauge(self.width/6,self.height*5/6/8*5, self.width/8, 0, 60, self.layers, screen_batch, dataType="C", gaugeColor2=DANGER)
+        self.inverter_temp = AnalogGauge(self.width/6,self.height*5/6/8*5, self.width/8, 0, 60, self.layers, screen_batch, dataType="C", info_text="Inverter")
+        self.motor_temp = AnalogGauge(self.width/6,self.height*5/6/8*1, self.width/8, 0, 60, self.layers, screen_batch, dataType="C", info_text="Motor")
     
     def update_endurance_screen(self):
         if self.current_window != 0: return
-        self.speed_gauge.update_pointer(self.data["speed"])
+        if self.should_update["speed"]:
+            self.speed_gauge.update_pointer(self.data["speed"])
+            self.should_update["speed"] = False
+        if self.should_update["inverter_temp"]:
+            self.inverter_temp.update_pointer(self.data["inverter_temp"])
+            self.should_update["inverter_temp"] = False
+        if self.should_update["motor_temp"]:
+            self.motor_temp.update_pointer(self.data["motor_temp"])
+            self.should_update["motor_temp"] = False
 
    
     
     def on_draw(self):
-        #t1 = perf_counter()
+        pyglet.clock.tick()
         self.clear()
         self.update_endurance_screen()
         self.default_batch.draw()
         self.batches[self.current_window].draw()
-        #print(perf_counter()-t1)
+        print(pyglet.clock.get_fps())
 
         
     def handle_can_io(self, dt):
-        #print(dt*1000) #prints time delay since last check
+        #print("delay: "+str(dt*1000)) #prints time delay since last check
         print(len(self.queue)) #prints the current queue of can messages to be displayed (should be close to 0)
         while len(self.queue)>0:
             q = self.queue.pop()
             self.data[q[0]] = q[1]
+            self.should_update[q[0]] = True
     
 
 

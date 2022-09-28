@@ -4,6 +4,8 @@ import can
 
 filter = {
     int("0x00a5", 16): {"can_id": 0x00a5, "can_mask": 0xFFFFFFF, "extended": False, "db": "cascadia"},
+    int("0x00a0", 16): {"can_id": 0x00a0, "can_mask": 0xFFFFFFF, "extended": False, "db": "cascadia"},
+    int("0x00a2", 16): {"can_id": 0x00a2, "can_mask": 0xFFFFFFF, "extended": False, "db": "cascadia"},
     int("0x06b0", 16): {"can_id": 0x06b0, "can_mask": 0xFFFFFFF, "extended": False, "db": "orion"},
 }
     
@@ -20,13 +22,19 @@ class CAN_io():
     def bus(self,storage):
         can_bus = can.Bus(interface="socketcan", channel="vcan0", can_filters=list(filter.values()))
         for msg in can_bus:
-            if not self.run: return
+            if not self.run: break
             
             data = db[filter[msg.arbitration_id]["db"]].decode_message(msg.arbitration_id, msg.data)
             q = []
             found = True
             if(msg.arbitration_id == int("0x00a5",16)):
                 q = ["speed", round(data["D2_Motor_Speed"]*0.0314256)]
+            elif(msg.arbitration_id == int("0x06b0",16)):
+                q = ["soc", round(data["Pack_SOC"])]
+            elif(msg.arbitration_id == int("0x00a0",16)):
+                q = ["inverter_temp", round((data["D1_Module_A"]+data["D2_Module_B"]+data["D3_Module_C"])/3)]
+            elif(msg.arbitration_id == int("0x00a2",16)):
+                q = ["motor_temp", round(data["D3_Motor_Temperature"])]
             else:
                 found = False
                 
