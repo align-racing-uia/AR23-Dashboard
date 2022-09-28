@@ -70,7 +70,7 @@ class Lamp(pyglet.shapes.Rectangle):
         self.anchor_y = self.height
         self.lamp = pyglet.shapes.Rectangle(x+width*5/100,y, width*95/100, height,color=OK,batch=batch, group=layers[1])
         self.lamp.anchor_y = self.height
-        self.text = pyglet.text.Label(text, x=x+width*5/100+self.lamp.width/2, y=y-(self.lamp.height/2), font_size=20, bold=True, anchor_x="center", anchor_y="center", color=(*TEXT, 255), group=layers[1], batch=batch)
+        self.text = pyglet.text.Label(text, x=x+width*5/100+self.lamp.width/2, y=y-(self.lamp.height/2), font_size=20, bold=True, anchor_x="center", anchor_y="center", color=(*TEXT, 255), group=layers[2], batch=batch)
         
 
 
@@ -85,6 +85,8 @@ class AR23GUI(pyglet.window.Window):
             "speed": 0,
             "soc": 0,
         }
+        
+        self.last_data = {}
 
         self.layers = [pyglet.graphics.OrderedGroup(0), pyglet.graphics.OrderedGroup(1), pyglet.graphics.OrderedGroup(2),pyglet.graphics.OrderedGroup(3)]
         self.default_batch = pyglet.graphics.Batch()
@@ -94,7 +96,7 @@ class AR23GUI(pyglet.window.Window):
         self.init_banner()
         self.init_lamps()
         self.init_endurance_screen()
-        pyglet.clock.schedule_interval(self.handle_can_io, 1/1100)
+        pyglet.clock.schedule_interval(self.handle_can_io, 1/1500)
 
 
     def init_banner(self):
@@ -135,10 +137,7 @@ class AR23GUI(pyglet.window.Window):
         print(len(self.queue)) #prints the current queue of can messages to be displayed (should be close to 0)
         while len(self.queue)>0:
             q = self.queue.pop()
-            if q[0] == int("0x00a5", 16):
-                self.data["speed"] = round(q[1]["D2_Motor_Speed"] * 0.0314256)
-            elif q[0] == int("0x06b0",16):
-                self.data["soc"] = round(q[1]["Pack_SOC"])
+            self.data[q[0]] = q[1]
     
 
 
