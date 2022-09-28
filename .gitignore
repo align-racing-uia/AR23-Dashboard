@@ -2,13 +2,11 @@
 !formatted_data.log
 !.gitignore
 !gui.py
-!canreader.py
-!data_formatter.py
-!pygameEvent.py
-!main.py
 !cascadia.dbc
 !elcon.dbc
 !AlignDBC.dbc
 !Orion_CANBUS.ini
+!can_io.py
+!colors.py
 *.pyc
 *.pyc
