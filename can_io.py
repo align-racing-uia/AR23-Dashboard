@@ -7,6 +7,7 @@ filter = {
     int("0x00a0", 16): {"can_id": 0x00a0, "can_mask": 0xFFFFFFF, "extended": False, "db": "cascadia"},
     int("0x00a2", 16): {"can_id": 0x00a2, "can_mask": 0xFFFFFFF, "extended": False, "db": "cascadia"},
     int("0x06b0", 16): {"can_id": 0x06b0, "can_mask": 0xFFFFFFF, "extended": False, "db": "orion"},
+    int("0x06b1", 16): {"can_id": 0x06b1, "can_mask": 0xFFFFFFF, "extended": False, "db": "orion"},
 }
     
 db = {
@@ -28,20 +29,16 @@ class CAN_io():
             q = []
             found = True
             if(msg.arbitration_id == int("0x00a5",16)):
-                q = ["speed", round(data["D2_Motor_Speed"]*0.0314256)]
+                storage["speed"] = [True, round(data["D2_Motor_Speed"]*0.0314256)]
             elif(msg.arbitration_id == int("0x06b0",16)):
-                q = ["soc", round(data["Pack_SOC"])]
+                storage["soc"] = [True, round(data["Pack_SOC"])]
             elif(msg.arbitration_id == int("0x00a0",16)):
-                q = ["inverter_temp", round((data["D1_Module_A"]+data["D2_Module_B"]+data["D3_Module_C"])/3)]
+                storage["inverter_temp"] = [True, round((data["D1_Module_A"]+data["D2_Module_B"]+data["D3_Module_C"])/3)]
             elif(msg.arbitration_id == int("0x00a2",16)):
-                q = ["motor_temp", round(data["D3_Motor_Temperature"])]
-            else:
-                found = False
+                storage["motor_temp"] = [True, round(data["D3_Motor_Temperature"])]
+            elif(msg.arbitration_id == int("0x06b1",16)):
+                storage["battery_temp"] = [True, round((data["High_Temperature"]+data["Low_Temperature"])/2)]
                 
-            if found:
-                if not q[0] in self.last_data or self.last_data[q[0]] != q[1]:
-                    self.last_data[q[0]] = q[1]
-                    storage.append(q)
-    
+
     def stop(self):
         self.run = False

@@ -68,7 +68,10 @@ class AnalogGauge():
         self.dataType = dataType
         self.reversed = reverse
         self.pointer_holder = pyglet.shapes.Sector(x,y,radius, angle=math.pi, color=gaugeColor, group=layers[0], batch=batch)
-        self.hot = pyglet.shapes.Sector(x,y,radius, angle=math.pi/4, color=gaugeColor2, group=layers[1], batch=batch)
+        if not reverse:
+            self.hot = pyglet.shapes.Sector(x,y,radius, angle=math.pi/4, color=gaugeColor2, group=layers[1], batch=batch)
+        else:
+            self.hot = self.hot = pyglet.shapes.Sector(x,y,radius, angle=math.pi/4, start_angle=math.pi*3/4, color=gaugeColor2, group=layers[1], batch=batch)
         self.middle = pyglet.shapes.Sector(x,y,radius*8/10, angle=math.pi, color=backgroundColor, group=layers[2], batch=batch)
         angle = 45
         self.pointer = pyglet.shapes.Triangle(x, y-radius/30, 
@@ -114,31 +117,22 @@ class AR23GUI(pyglet.window.Window):
         pyglet.gl.glClearColor(75/255,75/255,75/255, 1) # Background color
         pyglet.gl.glLineWidth(8) # Line width for drawing
 
-        self.data = {
-            "speed": 0,
-            "soc": 0,
-            "inverter_temp": 0,
-            "motor_temp": 0,
-
-        }
-        
-        self.should_update = {
-            "speed": False,
-            "soc": False,
-            "inverter_temp": False,
-            "motor_temp": False,
-
+        self.queue = {
+            "speed": [False,0],
+            "soc": [False,0],
+            "inverter_temp": [False,0],
+            "motor_temp": [False,0],
+            "battery_temp": [False,0]
         }
 
         self.layers = [pyglet.graphics.OrderedGroup(0), pyglet.graphics.OrderedGroup(1), pyglet.graphics.OrderedGroup(2),pyglet.graphics.OrderedGroup(3)]
         self.default_batch = pyglet.graphics.Batch()
         self.batches = [pyglet.graphics.Batch()]
         self.current_window = 0
-        self.queue = []
         self.init_banner()
         self.init_lamps()
         self.init_endurance_screen()
-        pyglet.clock.schedule_interval(self.handle_can_io, 1/120)
+        pyglet.clock.schedule_interval(self.force_draw,1/60)
 
 
     def init_banner(self):
@@ -159,18 +153,26 @@ class AR23GUI(pyglet.window.Window):
         self.speed_gauge = DigitalGauge(self.width/2, self.height*5/12, self.width/6, 0, 120, self.layers, screen_batch, extended=True)
         self.inverter_temp = AnalogGauge(self.width/6,self.height*5/6/8*5, self.width/8, 0, 60, self.layers, screen_batch, dataType="C", info_text="Inverter")
         self.motor_temp = AnalogGauge(self.width/6,self.height*5/6/8*1, self.width/8, 0, 60, self.layers, screen_batch, dataType="C", info_text="Motor")
+        self.battery_temp = AnalogGauge(self.width*5/6,self.height*5/6/8*5, self.width/8, 0, 60, self.layers, screen_batch, dataType="C", info_text="Battery")
+        self.soc = AnalogGauge(self.width*5/6,self.height*5/6/8*1, self.width/8, 0, 100, self.layers, screen_batch, reverse=True, dataType="%", info_text="Charge")
     
     def update_endurance_screen(self):
         if self.current_window != 0: return
-        if self.should_update["speed"]:
-            self.speed_gauge.update_pointer(self.data["speed"])
-            self.should_update["speed"] = False
-        if self.should_update["inverter_temp"]:
-            self.inverter_temp.update_pointer(self.data["inverter_temp"])
-            self.should_update["inverter_temp"] = False
-        if self.should_update["motor_temp"]:
-            self.motor_temp.update_pointer(self.data["motor_temp"])
-            self.should_update["motor_temp"] = False
+        if self.queue["speed"][1]:
+            self.speed_gauge.update_pointer(self.queue["speed"][1])
+            self.queue["speed"][0] = False
+        if self.queue["inverter_temp"][0]:
+            self.inverter_temp.update_pointer(self.queue["inverter_temp"][1])
+            self.queue["inverter_temp"][0] = False
+        if self.queue["motor_temp"][0]:
+            self.motor_temp.update_pointer(self.queue["motor_temp"][1])
+            self.queue["motor_temp"][0] = False
+        if self.queue["soc"][0]:
+            self.soc.update_pointer(self.queue["soc"][1])
+            self.queue["soc"][0] = False
+        if self.queue["battery_temp"][0]:
+            self.battery_temp.update_pointer(self.queue["battery_temp"][1])
+            self.queue["battery_temp"][0] = False
 
    
     
@@ -181,19 +183,11 @@ class AR23GUI(pyglet.window.Window):
         self.default_batch.draw()
         self.batches[self.current_window].draw()
         print(pyglet.clock.get_fps())
-
-        
-    def handle_can_io(self, dt):
-        #print("delay: "+str(dt*1000)) #prints time delay since last check
-        print(len(self.queue)) #prints the current queue of can messages to be displayed (should be close to 0)
-        while len(self.queue)>0:
-            q = self.queue.pop()
-            self.data[q[0]] = q[1]
-            self.should_update[q[0]] = True
     
+    def force_draw(self,dt):
+        pass
 
-
-
+                
 
 window = AR23GUI()
 can_bus = CAN_io()
