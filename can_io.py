@@ -18,7 +18,9 @@ db = {
 class CAN_io():
     def __init__(self):
         self.run = True
-        self.last_data = {}
+        self.history = {
+            "speed": []
+        }
 
     def bus(self,storage):
         can_bus = can.Bus(interface="socketcan", channel="vcan0", can_filters=list(filter.values()))
@@ -29,7 +31,12 @@ class CAN_io():
             q = []
             found = True
             if(msg.arbitration_id == int("0x00a5",16)):
-                storage["speed"] = [True, round(data["D2_Motor_Speed"]*0.0314256)]
+                self.history["speed"].append(round(data["D2_Motor_Speed"]*0.0314256))
+                if(len(self.history["speed"]) > 4):
+                    avg = sum(self.history["speed"])/len(self.history["speed"])
+                    self.history["speed"] = []
+                    storage["speed"] = [True, round(avg)]
+
             elif(msg.arbitration_id == int("0x06b0",16)):
                 storage["soc"] = [True, round(data["Pack_SOC"])]
             elif(msg.arbitration_id == int("0x00a0",16)):
