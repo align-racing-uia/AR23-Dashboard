@@ -132,7 +132,7 @@ class AR23GUI(pyglet.window.Window):
         self.init_banner()
         self.init_lamps()
         self.init_endurance_screen()
-        pyglet.clock.schedule_interval(self.force_draw,1/60)
+        pyglet.clock.schedule_interval(self.force_draw,1/30)
 
 
     def init_banner(self):
