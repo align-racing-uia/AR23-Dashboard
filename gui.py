@@ -1,8 +1,3 @@
-from concurrent.futures import thread
-from distutils.util import change_root
-from socket import SocketType
-from tracemalloc import start
-from turtle import width
 import pyglet
 import math
 from can_io import *
