@@ -1,12 +1,1 @@
-*
-!candump.log
-!.gitignore
-!gui.py
-!cascadia.dbc
-!elcon.dbc
-!AlignDBC.dbc
-!Orion_CANBUS.ini
-!can_io.py
-!colors.py
-*.pyc
-*.pyc
+/target
