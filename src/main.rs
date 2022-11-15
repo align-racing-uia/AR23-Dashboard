@@ -8,8 +8,8 @@ const HEIGHT: usize = 480;
 
 
 fn main(){
-    let mut buffer: Buffer = Buffer::new(WIDTH, HEIGHT);
-
+    let mut buffer: Buffer = Buffer::new(WIDTH as u32, HEIGHT as u32);
+    //let mut buffer: Vec<u32> = vec![];
     let win_ops = WindowOptions {
         borderless: true,
         ..Default::default()
@@ -28,8 +28,9 @@ fn main(){
 
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
-    let p1 = Point {x: 100, y: 300};
-    let p2 = Point {x: 300, y: 100};
+
+    let p1 = Point { x: 300, y: 100 };
+    let p2 = Point { x: 500, y: 200 };
 
     
     let mut i: u16 = 0;
@@ -37,7 +38,7 @@ fn main(){
     while window.is_open() && !window.is_key_down(Key::Escape) {
         i += 1;
         let mut color = Color::BLUE;
-        buffer.clear();
+        //buffer.clear();
         if i < 10 {
             color = Color::RED;
         } else if i<20 {
@@ -45,7 +46,10 @@ fn main(){
         } else if i>30 {
             i = 0;
         }
-        Draw::rect_fill(&mut buffer, &p1, &p2, color);
+
+        let clear_color = buffer.clear_color;
+        Draw::circle_line(&mut buffer, &p1, 100, color, 10, clear_color);
+        Draw::rect_line(&mut buffer, &p1, &p2, color, 5);
         window.update_with_buffer(&buffer.to_buffer(), WIDTH, HEIGHT).unwrap();
     }
 
