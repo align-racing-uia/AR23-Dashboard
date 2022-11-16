@@ -85,29 +85,47 @@ impl ops::IndexMut<usize> for Buffer {
 pub struct Text {
     text: String,
     pos: Point,
-    layout: Layout
+    text_size: f32,
+    layout: Layout,
+    color: u32,
 }
 
 impl Text {
 
-    pub fn new(buffer: &Buffer, pos: Point, input_text: &str) -> Self{
+    pub fn new(buffer: &Buffer, pos: Point, input_text: &str, size: f32, color: u32) -> Self{
         let text = String::from(input_text);
         let font = buffer.font.clone();
         let mut text_layout = Layout::new(layout::CoordinateSystem::PositiveYDown);
-        text_layout.append(&[font], &TextStyle::new(input_text, 18.0, 0));
+        text_layout.append(&[font], &TextStyle::new(input_text, size, 0));
         return Text {
             text: text,
             pos: pos,
-            layout: text_layout
-        };
+            text_size: size,
+            layout: text_layout,
+            color: color
+        };  
     }
 
     pub fn draw(&mut self, buffer: &mut Buffer) {
-        let mut x_offset = 0;
-        println!("{:?}", self.layout.glyphs());
+        //println!("{:?}", self.layout.glyphs()); 
         for g in self.layout.glyphs() {
-
+            let (metric, bitmap) = buffer.font.rasterize(g.parent, self.text_size);
+            for y in 0..metric.height {
+                for x in 0..metric.width {
+                    if bitmap[x+y * metric.width] > 100 {
+                        buffer.set(g.x as i32 + self.pos.x + x as i32, g.y as i32 + self.pos.y + y as i32, self.color);
+                    }
+                }
+            }
+            
         }
+    }
+
+    pub fn update_text(&mut self, buffer: &Buffer, new_text: &str) {
+        self.text = String::from(new_text);
+        self.layout.clear();
+        let font = buffer.font.clone();
+        self.layout.append(&[font], &TextStyle::new(new_text, self.text_size, 0));
     }
 
 }
