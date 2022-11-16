@@ -1,20 +1,35 @@
 use std::ops;
+use std::env;
+use std::io::prelude::*;
+use std::fs::File;
+use fontdue::*;
+use fontdue::layout::Layout;
+use fontdue::layout::TextStyle;
 
 pub struct Buffer {
     buffer: Vec<Vec<u32>>,
     pub width: u32,
     pub height: u32,
     pub clear_color: u32,
+    font: Font,
 }
 
 impl Buffer {
     
     pub fn new(width: u32, height: u32) -> Self {
+
+        println!("{:?}", env::current_dir().unwrap());
+
+        let mut font_file = include_bytes!("./victor-pixel.ttf") as &[u8];
+
+        let font = Font::from_bytes(font_file, fontdue::FontSettings::default()).unwrap();
+  
         Buffer { 
             buffer: vec![vec![Color::WHITE;width as usize];height as usize], 
             width: width, 
             height: height,
-            clear_color: Color::WHITE
+            clear_color: Color::WHITE,
+            font: font
         }
     }
 
@@ -62,10 +77,40 @@ impl ops::Index<usize> for Buffer {
 
 impl ops::IndexMut<usize> for Buffer {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        return &mut self.buffer[index];   
+        return &mut self.buffer[index];  
     }
 }
 
+
+pub struct Text {
+    text: String,
+    pos: Point,
+    layout: Layout
+}
+
+impl Text {
+
+    pub fn new(buffer: &Buffer, pos: Point, input_text: &str) -> Self{
+        let text = String::from(input_text);
+        let font = buffer.font.clone();
+        let mut text_layout = Layout::new(layout::CoordinateSystem::PositiveYDown);
+        text_layout.append(&[font], &TextStyle::new(input_text, 18.0, 0));
+        return Text {
+            text: text,
+            pos: pos,
+            layout: text_layout
+        };
+    }
+
+    pub fn draw(&mut self, buffer: &mut Buffer) {
+        let mut x_offset = 0;
+        println!("{:?}", self.layout.glyphs());
+        for g in self.layout.glyphs() {
+
+        }
+    }
+
+}
 
 pub struct Draw;
 

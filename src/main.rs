@@ -32,24 +32,14 @@ fn main(){
     let p1 = Point { x: 300, y: 100 };
     let p2 = Point { x: 500, y: 200 };
 
-    
+    let mut txt = Text::new(&mut buffer, p1, "Hello, ...  World!");
+
     let mut i: u16 = 0;
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         i += 1;
-        let mut color = Color::BLUE;
         //buffer.clear();
-        if i < 10 {
-            color = Color::RED;
-        } else if i<20 {
-            color = Color::GREEN;
-        } else if i>30 {
-            i = 0;
-        }
-
-        let clear_color = buffer.clear_color;
-        Draw::circle_line(&mut buffer, &p1, 100, color, 10, clear_color);
-        Draw::rect_line(&mut buffer, &p1, &p2, color, 5);
+        txt.draw(&mut buffer);
         window.update_with_buffer(&buffer.to_buffer(), WIDTH, HEIGHT).unwrap();
     }
 
