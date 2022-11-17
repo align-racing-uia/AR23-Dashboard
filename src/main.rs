@@ -5,8 +5,11 @@ use helper::*;
 
 fn main(){
     
+    let mut buffer = Buffer::new(800, 480);
+    Draw::circle_line(&mut buffer, &Point { x: 400, y: 240 }, 100, Color::RED, 5, Color::WHITE);
+
     let endu = EnduranceScreen {
-        buffer: Buffer::new(800, 480)
+        buffer: buffer
     };
     //let mut buffer: Vec<u32> = vec![];
     let mut gui = AR23GUI::new(800, 480, vec![
@@ -14,8 +17,11 @@ fn main(){
 
     ]);
 
-}
+    while gui.draw_screen() == Drawn::Ok {
+        
+    }
 
+}
 
 struct AR23GUI {
     window: Window, 
@@ -36,13 +42,20 @@ impl AR23GUI {
     }
 
 
-    fn draw_screen(&mut self) -> &Buffer {
+    fn draw_screen(&mut self) -> Drawn {
         if 0 >= self.screens.len() {
             panic!("No screens added!");
-            return &Buffer::new(self.width, self.height);
+            return Drawn::Err;
         }
+        let mut ok = true;
+        self.window.update_with_buffer(&self.screens[self.screen_index].buffer().to_buffer(), self.width as usize, self.height as usize).unwrap_or_else(|e|{
+            ok = false;
+        });
         
-        return &self.screens[self.screen_index].buffer();
+        if ok {
+            return Drawn::Ok;
+        }
+        return Drawn::Err;
     }
 }
 
@@ -68,6 +81,9 @@ impl AR23Screen for EnduranceScreen {
         return &self.buffer;
     }
 }
-
-
+#[derive(PartialEq)]
+enum Drawn {
+    Ok,
+    Err
+}
 
