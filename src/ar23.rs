@@ -1,7 +1,10 @@
-use crate::helper::*;
+use crate::{helper::*, cascadia_dbc::MessagesCascadia};
 use minifb::*;
-use can_dbc::*;
+use std::thread;
+use socketcan::*;
+use crossbeam_channel::{bounded};
 
+use crate::align_dbc::*;
 
 pub struct AR23GUI {
     window: Window, 
@@ -14,7 +17,8 @@ pub struct AR23GUI {
 impl AR23GUI {
     pub fn new(width: u32, height: u32, screens: Vec<Box<dyn AR23Screen>>) -> Self {
         let options = WindowOptions {
-            borderless: true, 
+            borderless: true,
+            
             ..Default::default()
         };
         let mut window = Window::new("AR23 GUI", width as usize, height as usize, options).unwrap();
@@ -41,14 +45,61 @@ impl AR23GUI {
     }
 
     pub fn should_close(&self) -> bool {
-        return self.window.is_open() && !self.window.is_key_down(Key::Escape);
+        // returns true if windows is closed, OR escape key is pressed
+        return !self.window.is_open() || self.window.is_key_down(Key::Escape);
     }
+
+    fn handle_data(&mut self, data_vector: Vec<CANFrame>){
+        self.screens[self.screen_index].update(data_vector);
+        //println!("Frame updated!");
+    }
+
+    pub fn run(&mut self) {
+
+        // creating channel to pass information about canbus back and forth
+        let (send, recieve) = bounded(0);
+
+        // spawn thread for reading the canbus.
+        thread::spawn( move ||{
+            let socket = CANSocket::open("vcan0").expect("vcan0, did not exist");
+            let mut last_message: CANFrame;
+            let mut frame_vector: Vec<CANFrame> = Vec::new();
+            loop {
+                // collect all canbus messages with minimum delay
+                last_message = socket.read_frame().unwrap();
+
+                // hopefully this should become too big.. (max around 100 messages at once)
+                frame_vector.push(last_message);
+                match send.try_send(frame_vector.clone()) {
+                    Ok(()) => {
+                        // if can frame buffer is sent, empty it
+                        println!("Emptied frame_vector when it had: {}", frame_vector.len());
+                        frame_vector = Vec::new();
+                    },
+                    _ => {}
+                }
+            }
+        });
+
+        while !self.should_close() {
+            let now = std::time::Instant::now();
+            self.draw_screen();
+            println!("{} ms to draw current screen",now.elapsed().as_millis());
+            //blocking recv -- no point in updating screen, if there is no new data
+            let data = recieve.recv().unwrap();
+            //blocking data handling - give necisarry data to the current screen
+            let now = std::time::Instant::now();
+            self.handle_data(data);
+            println!("{} ms to process canframes",now.elapsed().as_millis());
+        }
+    }
+
 }
 
 pub trait AR23Screen {
     
     fn draw(&mut self) -> &Buffer;
-    fn update(&mut self);
+    fn update(&mut self, data: Vec<CANFrame>);
     
 }
 
@@ -56,13 +107,15 @@ pub trait AR23Screen {
 pub struct EnduranceScreen {
     buffer: Buffer,
     status: String,
+    current_speed: i16,
 }
 
-impl  EnduranceScreen {
+impl EnduranceScreen {
     pub fn new(w: u32, h: u32) -> Self {
         EnduranceScreen { 
             buffer: Buffer::new(w, h),
-            status: String::from("Everything ok")
+            status: String::from("Everything ok"),
+            current_speed: 0
         }
     } 
 
@@ -77,18 +130,56 @@ impl  EnduranceScreen {
         status_text.draw(&mut self.buffer);
     }
 
+    fn draw_content(&mut self) {
+        let width = self.buffer.width as i32;
+        let height = self.buffer.height as i32;
+        let speed_text = Text::new(&self.buffer, Point { x: width/2 , y: height/2 }, format!("{} km/t", self.current_speed).as_str(), 40.0, Color::BLACK);
+        speed_text.draw(&mut self.buffer);
+    }
+
 }
 
 impl AR23Screen for EnduranceScreen {
 
-    fn update(&mut self) {
-        
+    fn update(&mut self, data: Vec<CANFrame>) {
+        for data_point in data {
+
+            // handling apps messages:
+            match MessagesAlign::from_can_message(data_point.id(), data_point.data()) {
+                Ok(apps) => {
+                   match apps {
+                        MessagesAlign::Apps(data) => {
+                            println!("GOT DATA!!");
+                            println!("Ready to drive: {:?}", data.ready_to_drive());
+                        },
+                        _ => {}
+                   } 
+                }
+                _ => {}
+            };
+
+            // handeling cascadia messages:
+            match MessagesCascadia::from_can_message(data_point.id(), data_point.data()) {
+                Ok(cascadia) => {
+                    match cascadia {
+                        MessagesCascadia::M165MotorPositionInfo(data) => {
+                            self.current_speed = (data.d2_motor_speed() as f32 * 0.0314256).round() as i16;
+                        }
+                        _ => {} // ignore the rest
+                    }
+                },
+                _ => {}
+            }
+
+
+        }
     }
 
     fn draw(&mut self) -> &Buffer {
 
         self.buffer.clear(Color::LIGHT_GRAY);
         self.draw_header();
+        self.draw_content();
 
         return &self.buffer;
     }
@@ -109,15 +200,13 @@ impl DebugScreen {
 
 impl AR23Screen for DebugScreen {
 
-    fn update(&mut self) {
+    fn update(&mut self, data: Vec<CANFrame>) {
         
     }
 
     fn draw(&mut self) -> &Buffer {
 
         self.buffer.clear(Color::LIGHT_GRAY);
-
-
 
         return &self.buffer;
     }

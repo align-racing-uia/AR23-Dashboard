@@ -104,7 +104,11 @@ impl Text {
         };  
     }
 
-    pub fn draw(&mut self, buffer: &mut Buffer) {
+    pub fn dimensions(&self) -> (i32, i32) {
+        (0, self.layout.height() as i32)
+    }
+
+    pub fn draw(&self, buffer: &mut Buffer) {
         //println!("{:?}", self.layout.glyphs()); 
         for g in self.layout.glyphs() {
             let (metric, bitmap) = buffer.font.rasterize(g.parent, self.text_size);
