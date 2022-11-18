@@ -10,7 +10,6 @@ pub struct Buffer {
     buffer: Vec<Vec<u32>>,
     pub width: u32,
     pub height: u32,
-    pub clear_color: u32,
     font: Font,
 }
 
@@ -28,13 +27,12 @@ impl Buffer {
             buffer: vec![vec![Color::WHITE;width as usize];height as usize], 
             width: width, 
             height: height,
-            clear_color: Color::WHITE,
             font: font
         }
     }
 
-    pub fn clear(&mut self) {
-        self.buffer = vec![vec![self.clear_color;self.width as usize]; self.height as usize];
+    pub fn clear(&mut self, color: u32) {
+        self.buffer = vec![vec![color;self.width as usize]; self.height as usize];
     }
 
     // makes it possible to fetch color, without having to check if coord is whitin bounds every time
