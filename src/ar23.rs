@@ -1,3 +1,7 @@
+use crate::helper::*;
+use minifb::*;
+use can_dbc::*;
+
 
 pub struct AR23GUI {
     window: Window, 
@@ -8,7 +12,7 @@ pub struct AR23GUI {
 }
 
 impl AR23GUI {
-    fn new(width: u32, height: u32, screens: Vec<Box<dyn AR23Screen>>) -> Self {
+    pub fn new(width: u32, height: u32, screens: Vec<Box<dyn AR23Screen>>) -> Self {
         let options = WindowOptions {
             borderless: true, 
             ..Default::default()
@@ -18,7 +22,7 @@ impl AR23GUI {
     }
 
 
-    fn draw_screen(&mut self) -> Drawn {
+    pub fn draw_screen(&mut self) -> Drawn {
         if 0 >= self.screens.len() {
             panic!("No screens added!");
             return Drawn::Err;
@@ -36,7 +40,7 @@ impl AR23GUI {
         return Drawn::Err;
     }
 
-    fn should_close(&self) -> bool {
+    pub fn should_close(&self) -> bool {
         return self.window.is_open() && !self.window.is_key_down(Key::Escape);
     }
 }
@@ -55,7 +59,7 @@ pub struct EnduranceScreen {
 }
 
 impl  EnduranceScreen {
-    fn new(w: u32, h: u32) -> Self {
+    pub fn new(w: u32, h: u32) -> Self {
         EnduranceScreen { 
             buffer: Buffer::new(w, h),
             status: String::from("Everything ok")
@@ -90,12 +94,12 @@ impl AR23Screen for EnduranceScreen {
     }
 }
 
-struct DebugScreen {
+pub struct DebugScreen {
     buffer: Buffer
 }
 
 impl DebugScreen {
-    fn new(w: u32, h: u32) -> Self {
+    pub fn new(w: u32, h: u32) -> Self {
         DebugScreen { buffer: Buffer::new(w, h) }
     } 
 
@@ -122,7 +126,7 @@ impl AR23Screen for DebugScreen {
 
 
 #[derive(PartialEq)]
-enum Drawn {
+pub enum Drawn {
     Ok,
     Err
 }
