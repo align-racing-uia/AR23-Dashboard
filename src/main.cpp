@@ -15,6 +15,8 @@
 
 #define CS_CAN 10
 
+bool fault_flag = false;
+
 MCP_CAN CAN0(CS_CAN);
 
 void setup() {
@@ -37,6 +39,11 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  if(digitalRead(PIN_J1)){
+    fault_flag = true;
+  }
+
   byte canFrame[1] = {0x0};
   canFrame[0] = digitalRead(PIN_J1);
   canFrame[0] <<= 1;
@@ -47,6 +54,9 @@ void loop() {
   canFrame[0] |= digitalRead(PIN_J4);
   canFrame[0] <<= 1;
   canFrame[0] |= digitalRead(PIN_R2D);
+
+  canFrame[0] |= fault_flag << 7;
+  
 
   byte sendFrame = CAN0.sendMsgBuf(0x0E0, 0, 1, canFrame);
   if(sendFrame == CAN_OK) {
