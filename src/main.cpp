@@ -1,38 +1,35 @@
-#include "align.h"
+/*
+
+Author: Håvard Nygård.
+Written for Align Racing, for use in the dashboard of AR23.
+
+*/
+
+// Duh
 #include <Arduino.h>
-#include <mcp_can.h>
+
+// Important to get the SPI pins working correctly for canbus
+#include <pins_arduino_override.h>
 #include <SPI.h>
-#include <TFT_eSPI.h> // This is configured for this exact build.
+
+// The handeling of the CANBUS
+#include <can.h>
+
+// Include everything related to the inverter
+#include <inverter.h>
+
+// Include everything related to the BMS
+#include <bms.h>
+
+// Adding some helper functions for multicore support
+#include <core1.h>
+
+// Include the Align racing logo
+#include "logo.h"
 
 
-#include <pico/multicore.h>
-#include <pico/mutex.h>
-void core1_setup();
-void core1_loop();
 
-TFT_eSPI tft = TFT_eSPI();       // Invoke custom library
-#define TFT_ALIGN 0xcb42 // The most important color
-#define SCREEN_WIDTH 480
-#define SCREEN_HEIGHT 320
 
-// All other screen configuration can be found in "./pio/libdeps/pico/TFT_eSPI/User_Setup.h"
-
-// CANBUS Configuration
-// NOTE: These pins have to be set in the pins_arduino.h file also, otherwise the default SPI instance uses
-// the wrong pins. Workaround suggestions greatly appericated.
-// TODO: Add a workaround which doesent include modifying libraries.
-#define CAN_SCK 2
-#define CAN_MOSI 3
-#define CAN_MISO 4
-#define CAN_INT 6
-#define CAN_CS 5
-MCP_CAN CAN0(CAN_CS);
-
-#define CAN_ID 0x0E0
-
-long unsigned int rxId;
-unsigned char rxLen = 0;
-unsigned char rxBuf[8];
 
 // Configuring buttons
 #define PIN_BTN1 27
@@ -41,108 +38,7 @@ unsigned char rxBuf[8];
 #define PIN_BTN4 28
 #define PIN_R2D 14
 
-// Variables
-// Inverter based states
-uint16_t vsmState = 0;
-uint16_t inverterState = 0;
-int inverterRunFaultCode[] = {0x0, 0x0, 0x0, 0x0};
-int inverterPostFaultCode[] = {0x0, 0x0, 0x0, 0x0};
-String currentPostFault = "";
-String currentRunFault = "";
 
-char *inverterStates[] = {"Powering on", 
-                      "Inverter Stopped", 
-                      "Inverter Open Loop", 
-                      "Inverter Closed Loop",
-                      "Inverter Waiting",
-                      "N/A",
-                      "N/A",
-                      "N/A",
-                      "Inverter Idle Run",
-                      "Inverter Idle Stopped",
-                      "N/A",
-                      "N/A",
-                      "N/A"};
-
-char *vsmStates[] = {"VSM Start State",
-                    "Precharge Init State",
-                    "Precharge Active State",
-                    "VSM Wait State",
-                    "VSM Ready State",
-                    "Motor Running State",
-                    "Fault Code Blinking State"};
-
-char *postFaults[] = {"Hardware Gate/Desat.Fault",
-                      "HW Over-current Fault",
-                      "Accelerator Shorted",
-                      "Accelerator Open",
-                      "Current Sensor Low",
-                      "Current Sensor High",
-                      "Module Temperature Low",
-                      "Module Temperature High",
-                      "Control PCB Temperature Low",
-                      "Control PCB Temperature High",
-                      "GD PCB Temp. Low",
-                      "GD PCB Temp. High",
-                      "5V Sense Voltage Low",
-                      "5V Sense Voltage High",
-                      "12V Sense Voltage Low",
-                      "12V Sense Voltage High",
-                      "2.5V Sense Voltage Low",
-                      "2.5V Sense Voltage High",
-                      "1.5V Sense Voltage Low",
-                      "1.5V Sense Voltage High",
-                      "DC Bus Voltage High",
-                      "DC Bus Voltage Low",
-                      "Pre-charge Timeout",
-                      "Pre-charge Voltage Failure",
-                      "EEPROM Checksum Invalid",
-                      "EEPROM Data Out of Range",
-                      "EEPROM Update Required",
-                      "DC Bus Over-Voltage on Init",
-                      "GDr Initializion",
-                      "Reserved",
-                      "Brake Shorted",
-                      "Brake Open"};   
-
-char *runFaults[] = {"Motor Over-speed Fault",
-                  "Over-current Fault",
-                  "Over-voltage Fault",
-                  "Inverter Over-temperature Fault",
-                  "Accelerator Input Shorted Fault",
-                  "Accelerator Input Open Fault",
-                  "Direction Command Fault",
-                  "Inverter Response Time-out Fault",
-                  "Hardware Gate/Desat. Fault",
-                  "Hardware Over-current Fault",
-                  "Under-voltage Fault",
-                  "CAN Command Message Lost Fault",
-                  "Motor Over-temperature Fault",
-                  "Reserved",
-                  "Reserved",
-                  "Reserved",
-                  "Brake Input Shorted Fault",
-                  "Brake Input Open Fault",
-                  "Module A Over-temperature Fault",
-                  "Module B Over-temperature Fault",
-                  "Module C Over-temperature Fault",
-                  "PCB Over-temperature Fault",
-                  "GDB 1 Over-temp. Fault",
-                  "GDB 2 Over-temp. Fault",
-                  "GDB 3 Over-temp. Fault",
-                  "Current Sensor Fault",
-                  "GDr Over-Voltage",
-                  "Reserved",
-                  "Hardware DC Bus Over-voltage Fault",
-                  "Reserved",
-                  "Resolver Not Connected",
-                  "Reserved"};  
-
- 
-
-// BMS States
-int soc = 100;
-int dcVoltage = 340;
 
 // Button states
 bool btn1 = false;
@@ -160,6 +56,11 @@ int criticalError = 0;
 bool updateTopStatus = true;
 bool updateBottomStatus = true;
 bool updateMiddleStatus = true;
+
+#include <TFT_eSPI.h> // This is configured for this exact build.
+TFT_eSPI tft = TFT_eSPI();
+#define SCREEN_WIDTH 480
+#define SCREEN_HEIGHT 320
 
 // Error list
 char *criticalErrors[] = {"N/A",
@@ -520,9 +421,6 @@ void setup(void) {
   inverterTimestamp = millis();
   appsTimestamp = millis();
 
-  // Launching the second core of the pico:
-  // multicore_launch_core1(core1_loop);
-
 }
 
 void loop() {
@@ -553,8 +451,3 @@ void loop() {
   delay(5);
 
 }
-
-void core1_loop(){
-  // TODO: Move some heavy lifting over here 
-}
-
