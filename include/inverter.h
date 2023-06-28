@@ -1,9 +1,9 @@
 
 #include <Arduino.h>
+#ifndef INVERTER_H
+#define INVERTER_H
 
-// Inverter based states
-uint16_t vsmState = 0;
-uint16_t inverterState = 0;
+
 int inverterRunFaultCode[] = {0x0, 0x0, 0x0, 0x0};
 int inverterPostFaultCode[] = {0x0, 0x0, 0x0, 0x0};
 String currentPostFault = "";
@@ -98,3 +98,4 @@ char *runFaults[] = {"Motor Over-speed Fault",
                   "Reserved",
                   "Resolver Not Connected",
                   "Reserved"};  
+#endif

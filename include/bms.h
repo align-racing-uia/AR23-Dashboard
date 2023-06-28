@@ -1,3 +1,5 @@
-// BMS States
-int soc = 100;
-int dcVoltage = 340;
+#ifndef BMS_H
+#define BMS_H
+
+
+#endif
