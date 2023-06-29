@@ -8,10 +8,10 @@
         {
             "name": "PlatformIO",
             "includePath": [
-                "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/include",
-                "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/src",
-                "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/.pio/libdeps/pico/mcp_can",
-                "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/.pio/libdeps/pico/TFT_eSPI",
+                "C:/Users/haava/Desktop/dashboard/include",
+                "C:/Users/haava/Desktop/dashboard/src",
+                "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/TFT_eSPI",
+                "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/mcp_can",
                 "C:/Users/haava/.platformio/packages/framework-arduino-mbed/libraries/SPI",
                 "C:/Users/haava/.platformio/packages/framework-arduino-mbed/cores/arduino",
                 "C:/Users/haava/.platformio/packages/framework-arduino-mbed/cores/arduino/api/deprecated",
@@ -63,10 +63,10 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
-                    "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/include",
-                    "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/src",
-                    "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/.pio/libdeps/pico/mcp_can",
-                    "c:/Users/haava/Desktop/skole/align/AMT Sensoren/dashboard/.pio/libdeps/pico/TFT_eSPI",
+                    "C:/Users/haava/Desktop/dashboard/include",
+                    "C:/Users/haava/Desktop/dashboard/src",
+                    "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/TFT_eSPI",
+                    "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/mcp_can",
                     "C:/Users/haava/.platformio/packages/framework-arduino-mbed/libraries/SPI",
                     "C:/Users/haava/.platformio/packages/framework-arduino-mbed/cores/arduino",
                     "C:/Users/haava/.platformio/packages/framework-arduino-mbed/cores/arduino/api/deprecated",

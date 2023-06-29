@@ -1,34 +1,42 @@
-#ifndef STATES_H
-#define STATES_H
+#ifndef STATES_H_
+#define STATES_H_
 #include <Arduino.h>
 // Button states
-bool btn1 = false;
-bool btn2 = false;
-bool btn3 = false;
-bool btn4 = false;
-bool r2d = false;
+extern bool btn1;
+extern bool btn2;
+extern bool btn3;
+extern bool btn4;
+extern bool r2d;
 
 // Apps based states
-bool r2dState = false;
-bool sdcState = false;
+extern bool r2dState;
+extern bool sdcState;
 
 // Internal states
-int criticalError = 0;
-bool updateTopStatus = true;
-bool updateBottomStatus = true;
-bool updateMiddleStatus = true;
+extern int criticalError;
+extern bool updateTopStatus;
+extern bool updateBottomStatus;
+extern bool updateMiddleStatus;
 
 // Inverter states
-uint16_t vsmState = 0;
-uint16_t inverterState = 0;
+extern uint16_t vsmState;
+extern uint16_t inverterState;
+extern int inverterRunFaultCode[4];
+extern int inverterPostFaultCode[4];
+extern String currentPostFault;
+extern bool activePostFault;
+extern String currentRunFault;
+extern bool activeRunFault;
+
+
 
 // BMS States
-int soc = 100;
-int dcVoltage = 340;
+extern int soc;
+extern int dcVoltage;
 
 // Timestamps
-long unsigned int broadcastTimestamp = 0;
-long unsigned int inverterTimestamp = 0;
-long unsigned int appsTimestamp = 0;
+extern long unsigned int broadcastTimestamp;
+extern long unsigned int inverterTimestamp;
+extern long unsigned int appsTimestamp;
 
 #endif

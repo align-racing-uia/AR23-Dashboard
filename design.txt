@@ -1,0 +1,2 @@
+CORE1 should handle everything related to CANBUS, and updating states from canbus, as i think it is easier to transfer this functionality to Core1.
+CORE0 will handle everything userinterface related.
