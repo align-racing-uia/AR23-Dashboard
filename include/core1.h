@@ -5,6 +5,5 @@
 
 void core1_setup();
 void core1_loop();
-void core1_start();
 
 #endif

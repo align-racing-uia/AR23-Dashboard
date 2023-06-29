@@ -6,6 +6,9 @@
 #include <bms.h>
 
 #define CAN_CS 5
+#define CAN_MOSI 3
+#define CAN_MISO 4
+#define CAN_SCK 2
 #define CAN_INT 6
 extern MCP_CAN CAN0;
 

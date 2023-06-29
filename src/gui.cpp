@@ -1,7 +1,7 @@
 #include <gui.h>
 
 // Error list
-char *criticalErrors[] = {"N/A",
+String criticalErrors[] = {"N/A",
                       "AMS Fault", 
                       "Brake Implausibility",
                       "SDC Open",

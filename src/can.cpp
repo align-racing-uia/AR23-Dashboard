@@ -93,6 +93,13 @@ void canTx(){
 }
 
 void canInit(){
+
+    // Configuring our canbus spi connection correctly
+    SPI.setRX(CAN_MISO);
+    SPI.setSCK(CAN_SCK);
+    SPI.setTX(CAN_MOSI);
+  
+
     pinMode(CAN_INT, INPUT);
     pinMode(CAN_CS, OUTPUT);
 

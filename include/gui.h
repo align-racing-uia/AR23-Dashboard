@@ -14,7 +14,7 @@ extern TFT_eSPI tft;
 
 
 // Error list
-extern char *criticalErrors[];
+extern String criticalErrors[];
 
 void screensaver();
 
