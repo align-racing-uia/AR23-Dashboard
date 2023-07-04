@@ -18,6 +18,7 @@ extern long unsigned int rxId;
 extern unsigned char rxLen;
 extern unsigned char rxBuf[8];
 
+void canUpdate();
 
 void canRx();
 

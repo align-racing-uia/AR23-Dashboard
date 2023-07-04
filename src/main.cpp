@@ -51,11 +51,11 @@ void setup(void) {
   // Initializing CANBUS communication
   // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
 
-  pinMode(PIN_BTN1, INPUT);
-  pinMode(PIN_BTN2, INPUT);
-  pinMode(PIN_BTN3, INPUT);
-  pinMode(PIN_BTN4, INPUT);
-  pinMode(PIN_R2D, INPUT);
+  pinMode(PIN_BTN1, INPUT_PULLDOWN);
+  pinMode(PIN_BTN2, INPUT_PULLDOWN);
+  pinMode(PIN_BTN3, INPUT_PULLDOWN);
+  pinMode(PIN_BTN4, INPUT_PULLDOWN);
+  pinMode(PIN_R2D, INPUT_PULLDOWN);
 
   clearScreen();
   inverterTimestamp = millis();
@@ -91,6 +91,7 @@ void setup1(){
 
 void loop1(){
   canRx();
+  canUpdate(); // Update shared states
   if(millis() - broadcastTimestamp > 100){
     canTx();
     broadcastTimestamp = millis();

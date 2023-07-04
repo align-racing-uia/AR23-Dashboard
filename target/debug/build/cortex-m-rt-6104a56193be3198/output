@@ -1,0 +1,3 @@
+cargo:rustc-link-search=C:\Users\haava\Desktop\skole\align\Dashbord\VirtualBox\dashboard\target\debug\build\cortex-m-rt-6104a56193be3198\out
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-changed=link.x.in

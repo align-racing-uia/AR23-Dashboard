@@ -1,10 +1,21 @@
 
 #include <can.h>
+#include <core1.h>
 
 long unsigned int rxId = 0;
 unsigned char rxLen = 0;
 unsigned char rxBuf[] = {0, 0, 0, 0, 0, 0, 0, 0};
 MCP_CAN CAN0(CAN_CS);
+
+void canUpdate(){
+  if(!readyForData) return;
+  sharedDcVoltage = dcVoltage;
+  sharedInverterState = inverterState;
+  sharedR2DState = r2dState;
+  sharedSdcState = sdcState;
+  sharedVsmState = vsmState;
+  readyForData = false;
+}
 
 void canRx(){
   
@@ -61,7 +72,7 @@ void canRx(){
       updateBottomStatus = updateBottomStatus || oldState != r2dState;
 
       oldState = sdcState;
-      sdcState = 0x4 & rxBuf[3];
+      sdcState = 0x8 & rxBuf[3];
       updateBottomStatus = updateBottomStatus || oldState != sdcState;
       appsTimestamp = millis();
       break;
@@ -75,13 +86,13 @@ void canRx(){
 
 void canTx(){
   byte canFrame[2] = {0x0, 0x0};
-  canFrame[0] = btn1;
+  canFrame[0] = btn2;
   canFrame[0] <<= 1;
-  canFrame[0] |= btn2;
-  canFrame[0] <<= 1;
-  canFrame[0] |= btn3;
+  canFrame[0] |= btn1;
   canFrame[0] <<= 1;
   canFrame[0] |= btn4;
+  canFrame[0] <<= 1;
+  canFrame[0] |= btn3;
   canFrame[0] <<= 1;
   canFrame[0] |= r2d;
 

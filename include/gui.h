@@ -5,6 +5,7 @@
 #include <TFT_eSPI.h> // This is configured for this exact build.
 #include <inverter.h>
 #include <states.h>
+#include <core1.h>
 
 #include <logo.h>
 

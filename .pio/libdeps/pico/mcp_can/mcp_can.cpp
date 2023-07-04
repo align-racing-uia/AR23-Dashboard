@@ -601,7 +601,7 @@ INT8U MCP_CAN::mcp2515_init(const INT8U canIDMode, const INT8U canSpeed, const I
             mcp2515_modifyRegister(MCP_RXB1CTRL, MCP_RXB_RX_MASK,
             MCP_RXB_RX_ANY);
             break;
-
+/*          The followingn two functions of the MCP2515 do not work, there is a bug in the silicon.
             case (MCP_STD): 
             mcp2515_modifyRegister(MCP_RXB0CTRL,
             MCP_RXB_RX_MASK | MCP_RXB_BUKT_MASK,
@@ -617,12 +617,11 @@ INT8U MCP_CAN::mcp2515_init(const INT8U canIDMode, const INT8U canSpeed, const I
             mcp2515_modifyRegister(MCP_RXB1CTRL, MCP_RXB_RX_MASK,
             MCP_RXB_RX_EXT);
             break;
-
+*/
             case (MCP_STDEXT): 
             mcp2515_modifyRegister(MCP_RXB0CTRL,
             MCP_RXB_RX_MASK | MCP_RXB_BUKT_MASK,
             MCP_RXB_RX_STDEXT | MCP_RXB_BUKT_MASK );
-            // Register: 07h, Mask: 0110 0000, Register Value: 0000 0000
             mcp2515_modifyRegister(MCP_RXB1CTRL, MCP_RXB_RX_MASK,
             MCP_RXB_RX_STDEXT);
             break;
@@ -825,7 +824,7 @@ MCP_CAN::MCP_CAN(INT8U _CS)
 INT8U MCP_CAN::begin(INT8U idmodeset, INT8U speedset, INT8U clockset)
 {
     INT8U res;
-    
+
     SPI.begin();
     res = mcp2515_init(idmodeset, speedset, clockset);
     if (res == MCP2515_OK)

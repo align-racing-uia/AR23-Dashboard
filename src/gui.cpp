@@ -31,14 +31,14 @@ void drawInverterStatus(){
     return;
   }
 
-  if(inverterState <= 4){
+  if(sharedInverterState <= 4){
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
     // Serial.println("Try change to yellow");
-    tft.drawString(inverterStates[inverterState], 18, SCREEN_HEIGHT/10+15);
+    tft.drawString(inverterStates[sharedInverterState], 18, SCREEN_HEIGHT/10+15);
   }else{
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
     // Serial.println("Drawing the green text");
-    tft.drawString(inverterStates[inverterState], 18, SCREEN_HEIGHT/10+15);
+    tft.drawString(inverterStates[sharedInverterState], 18, SCREEN_HEIGHT/10+15);
   }
   
 }
@@ -46,7 +46,7 @@ void drawInverterStatus(){
 void drawR2DStatus(){
   tft.setTextSize(3);
   int color = TFT_RED;
-  if(r2dState){
+  if(sharedR2DState){
     color = TFT_GREEN;
   }
   tft.fillRect(((SCREEN_WIDTH / 6) * 5) + 1, SCREEN_HEIGHT / 5 * 4 + 1, (SCREEN_WIDTH / 6) - 2, (SCREEN_HEIGHT / 5)- 2, color);
@@ -73,14 +73,14 @@ void drawSDCStatus(){
 
 void drawVsmStatus(){
   tft.setTextSize(2);
-  if(vsmState < 5){
+  if(sharedVsmState < 5){
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
     // Serial.println("Try change to yellow");
-    tft.drawString(vsmStates[vsmState], 18, (SCREEN_HEIGHT/5*4) + SCREEN_HEIGHT/10+25);
+    tft.drawString(vsmStates[sharedVsmState], 18, (SCREEN_HEIGHT/5*4) + SCREEN_HEIGHT/10+25);
   }else if(vsmState == 5){
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
     // Serial.println("Drawing the green text");
-    tft.drawString(vsmStates[vsmState], 18, (SCREEN_HEIGHT/5*4) + SCREEN_HEIGHT/10+25);
+    tft.drawString(vsmStates[sharedVsmState], 18, (SCREEN_HEIGHT/5*4) + SCREEN_HEIGHT/10+25);
   }else{
     tft.setTextColor(TFT_RED, TFT_BLACK);
     // Serial.println("Drawing the green text");
@@ -93,8 +93,8 @@ void drawMiddleStatus(){
   tft.setTextDatum(BL_DATUM);
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.fillRect(0, SCREEN_HEIGHT/5*1, SCREEN_WIDTH/2, SCREEN_HEIGHT/10*3, TFT_BLACK);
-  tft.drawString("SOC: "+String(soc)+"%",18, SCREEN_HEIGHT/5*1+45);
-  tft.drawString("TS DC: "+String(dcVoltage)+"V", 18, SCREEN_HEIGHT/5*2+20);
+  tft.drawString("SOC: "+String(sharedSoc)+"%",18, SCREEN_HEIGHT/5*1+45);
+  tft.drawString("TS DC: "+String(sharedDcVoltage)+"V", 18, SCREEN_HEIGHT/5*2+20);
   tft.setTextColor(TFT_RED, TFT_BLACK);
   tft.setTextDatum(TL_DATUM);
   tft.setTextSize(2);
@@ -115,6 +115,8 @@ void drawMiddleStatus(){
 
 void drawUI(){
   // No need to update the whole screen for everything, and risking blinky graphics.
+  if(readyForData) return;
+
   if(updateTopStatus){
     tft.fillRect(5,5, SCREEN_WIDTH-10, SCREEN_HEIGHT/5-10, TFT_BLACK);
     tft.drawRect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT/5, TFT_ALIGN);
@@ -134,6 +136,7 @@ void drawUI(){
     drawR2DStatus();
     drawSDCStatus();
   }
+  readyForData = true;
  
 }
 

@@ -1,0 +1,5 @@
+cargo:rustc-cfg=cortex_m
+cargo:rustc-cfg=armv6m
+cargo:rustc-link-search=C:\Users\haava\Desktop\skole\align\Dashbord\VirtualBox\dashboard\target\thumbv6m-none-eabi\debug\build\cortex-m-rt-9dd3f31bd15323c7\out
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-changed=link.x.in
