@@ -1,2 +1,11 @@
 CORE1 should handle everything related to CANBUS, and updating states from canbus, as i think it is easier to transfer this functionality to Core1.
 CORE0 will handle everything userinterface related.
+
+
+CAN IDS needed to be accepted:
+0x0AA,
+0x0A7,
+0x0A9,
+0x6B0,
+0x0AB,
+0x0E1,

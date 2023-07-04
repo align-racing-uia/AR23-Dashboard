@@ -14,6 +14,8 @@ void resetFaultCodes();
 
 void checkForFaults();
 
+extern String criticalErrors[];
+
 
 
 

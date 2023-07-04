@@ -41,12 +41,12 @@ Written for Align Racing, for use in the dashboard of AR23.
 #define PIN_BTN4 28
 #define PIN_R2D 14
 
+bool btn1_toggled = false;
 
 void setup(void) {
   Serial.begin(9600);
 
   initUI();
-  screensaver();
   
   // Initializing CANBUS communication
   // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
@@ -57,7 +57,7 @@ void setup(void) {
   pinMode(PIN_BTN4, INPUT_PULLDOWN);
   pinMode(PIN_R2D, INPUT_PULLDOWN);
 
-  clearScreen();
+  clearScreen(TFT_BLACK);
   inverterTimestamp = millis();
   appsTimestamp = millis();
 
@@ -74,9 +74,37 @@ void loop() {
   checkForFaults();
   drawUI();
   //Resetting fault codes can be practical during testing
-  if(btn3){
+  if(btn2){
     resetFaultCodes();
   }
+
+  blinkingTimestamp = millis();
+
+  if(blinkingTimestamp % 1000 > 500){
+    blink = true;
+  }else{
+    blink = false;
+  }
+
+  if(btn1 && !btn1_toggled) {
+    btn1_toggled = true;
+    currentScreen += 1;
+    if(currentScreen > 2) {
+      currentScreen = 1;
+    }
+    clearScreen(TFT_BLACK);
+    updateBrakeStatus = true;
+    updateScreensaver = true;
+    updateBottomStatus = true;
+    updateMiddleStatus = true;
+    updateTopStatus = true;
+  }
+
+  if(!btn1) {
+    btn1_toggled = false;
+  }
+
+
 
   
 

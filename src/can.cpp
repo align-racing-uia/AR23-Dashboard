@@ -11,10 +11,24 @@ void canUpdate(){
   if(!readyForData) return;
   sharedDcVoltage = dcVoltage;
   sharedInverterState = inverterState;
+  sharedSoc = soc;
   sharedR2DState = r2dState;
   sharedSdcState = sdcState;
   sharedVsmState = vsmState;
+  sharedPackTemp = packTemp;
+  sharedPackPower = packPower;
   readyForData = false;
+  sharedLowVoltageState = lowVoltageState;
+  sharedUpdateBottomStatus = updateBottomStatus;
+  sharedUpdateMiddleStatus = updateMiddleStatus;
+  sharedUpdateTopStatus = updateTopStatus;
+  for(int i=0; i<4; i++){
+    sharedInverterPostFaultCode[i] = inverterPostFaultCode[i];
+    sharedInverterRunFaultCode[i] = inverterRunFaultCode[i];
+  }
+  updateBottomStatus = false;
+  updateMiddleStatus = false;
+  updateTopStatus = false;
 }
 
 void canRx(){
@@ -40,18 +54,44 @@ void canRx(){
       inverterTimestamp = millis();
       break;
 
-    case 0x0A7:
-      oldState = dcVoltage;
-      dcVoltage = rxBuf[1] << 8;
-      dcVoltage |= rxBuf[0];
-      dcVoltage /= 10;
-      updateMiddleStatus = updateMiddleStatus || dcVoltage != oldState;
+    case 0x0A9:
+      oldState = lowVoltageState;
+      lowVoltageState = rxBuf[7] << 8;
+      lowVoltageState |= rxBuf[6];
+      updateMiddleStatus = updateMiddleStatus || lowVoltageState != oldState;
+
+      break;
+
+    case 0x0AC:
+      
+      oldState = packPower;
+      packPower = rxBuf[3] << 8;
+      packPower |= rxBuf[2];
+      packPower /= 10;
+      updateBottomStatus = updateBottomStatus || packPower != oldState;
+
       break;
 
     case 0x6B0:
       oldState = soc;
       soc = rxBuf[4]/2;
       updateMiddleStatus = updateMiddleStatus || soc != oldState;
+
+      oldState = dcVoltage;
+      dcVoltage = rxBuf[2] << 8;
+      dcVoltage |= rxBuf[3];
+      dcVoltage /= 10;
+      updateMiddleStatus = updateMiddleStatus || dcVoltage != oldState;
+
+      bmsTimestamp = millis();
+      
+      break;
+    
+    case 0x6B1:
+      oldState = packTemp;
+      packTemp = rxBuf[4];
+      updateMiddleStatus = updateMiddleStatus || packTemp != oldState;
+
       break;
 
     case 0x0AB:
@@ -76,8 +116,8 @@ void canRx(){
       updateBottomStatus = updateBottomStatus || oldState != sdcState;
       appsTimestamp = millis();
       break;
+
     default:
-      Serial.println("Recieved unknown message..");
       return;
   }
 
@@ -121,14 +161,15 @@ void canInit(){
         Serial.println("MCP2515 Error...");
     }
     // All filters and masks has to be set for it to work properly.
-    CAN0.init_Mask(0, 0x03FF0000);
+    CAN0.init_Mask(0, 0x00F00000);
+    CAN0.init_Filt(0, 0x00A00000); //+ Owned by mask 0
+    CAN0.init_Filt(1, 0x00E00000); //+
+
     CAN0.init_Mask(1, 0x06FF0000);
-    CAN0.init_Filt(0, 0x00A70000); //+ Owned by mask 0
-    CAN0.init_Filt(1, 0x00AA0000); //+
     CAN0.init_Filt(2, 0x06B00000); //- Owned by mask 1
-    CAN0.init_Filt(3, 0x00E10000); //-
-    CAN0.init_Filt(4, 0x00AB0000); //-
-    CAN0.init_Filt(5, 0x00AA0000); //-
+    CAN0.init_Filt(3, 0x06B10000); //-
+    CAN0.init_Filt(4, 0x06B00000); //-
+    CAN0.init_Filt(5, 0x06B00000); //-
 
 
     CAN0.setMode(MCP_NORMAL);   // Change to normal mode to allow messages to be transmitted

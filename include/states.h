@@ -7,6 +7,9 @@ extern bool btn2;
 extern bool btn3;
 extern bool btn4;
 extern bool r2d;
+extern bool blink;
+
+extern int currentScreen;
 
 // Apps based states
 extern bool r2dState;
@@ -17,6 +20,9 @@ extern int criticalError;
 extern bool updateTopStatus;
 extern bool updateBottomStatus;
 extern bool updateMiddleStatus;
+extern bool updateBrakeStatus;
+extern bool updateDriverStatus;
+extern bool updateScreensaver;
 
 // Inverter states
 extern uint16_t vsmState;
@@ -27,16 +33,21 @@ extern String currentPostFault;
 extern bool activePostFault;
 extern String currentRunFault;
 extern bool activeRunFault;
+extern int lowVoltageState;
 
 
 
 // BMS States
 extern int soc;
 extern int dcVoltage;
+extern int packTemp;
+extern int packPower;
 
 // Timestamps
 extern long unsigned int broadcastTimestamp;
 extern long unsigned int inverterTimestamp;
+extern long unsigned int bmsTimestamp;
 extern long unsigned int appsTimestamp;
+extern long unsigned int blinkingTimestamp;
 
 #endif

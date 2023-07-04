@@ -1,4 +1,17 @@
 #include <faults.h>
+#include <core1.h>
+#include <gui.h>
+
+// Error list
+String criticalErrors[] = {"N/A",
+                      "AMS Fault", 
+                      "Brake Implausibility",
+                      "SDC Open",
+                      "Inverter Silent",
+                      "APPS Silent",
+                      "Fault Codes Blinking",
+                      "Low System Voltage!!!",
+                      "BMS Silent"};
 
 // Should be simplified, but will probably not run much during a single session
 void mapRunFault(){
@@ -37,16 +50,18 @@ void resetFaultCodes(){
   criticalError = 0;
   currentPostFault = "";
   currentRunFault = "";
+  clearScreen(TFT_BLACK);
   updateTopStatus = true;
   updateBottomStatus = true;
   updateMiddleStatus = true;
+  updateDriverStatus = true;
 
 }
 
 void checkForFaults(){
 
   // If any bit is set, there is a error.
-  if(inverterRunFaultCode[0] | inverterRunFaultCode[1] | inverterRunFaultCode[2] | inverterRunFaultCode[3] > 0){
+  if(sharedInverterRunFaultCode[0] | sharedInverterRunFaultCode[1] | sharedInverterRunFaultCode[2] | sharedInverterRunFaultCode[3] > 0){
     mapRunFault();
     if(criticalError != 6){
       updateTopStatus = true;
@@ -56,7 +71,7 @@ void checkForFaults(){
     resetFaultCodes();
   }
 
-  if(inverterPostFaultCode[0] | inverterPostFaultCode[1] | inverterPostFaultCode[2] | inverterPostFaultCode[3] > 0){
+  if(sharedInverterPostFaultCode[0] | sharedInverterPostFaultCode[1] | sharedInverterPostFaultCode[2] | sharedInverterPostFaultCode[3] > 0){
     mapPostFault();
     if(criticalError != 6){
       updateTopStatus = true;
@@ -66,6 +81,7 @@ void checkForFaults(){
   }else if(currentPostFault != ""){
     resetFaultCodes();
   }
+
 
   // Will only display the first proper error.
   // The last error checked will probably take priority
@@ -81,6 +97,17 @@ void checkForFaults(){
     if(millis() - appsTimestamp > 2000){
       updateTopStatus = criticalError != 5;
       criticalError = 5;
+    }
+
+    if(millis() - bmsTimestamp > 2000){
+      updateTopStatus = criticalError != 8;
+      criticalError = 8;
+    }
+
+    if(sharedLowVoltageState < 1150){
+      updateTopStatus = criticalError != 7;
+      updateMiddleStatus = criticalError != 7;
+      criticalError = 7; 
     }
   }
 }

@@ -19,7 +19,7 @@ extern String criticalErrors[];
 
 void screensaver();
 
-void clearScreen();
+void clearScreen(uint16_t);
 
 void drawInverterStatus();
 
@@ -32,6 +32,12 @@ void drawVsmStatus();
 void drawMiddleStatus();
 
 void drawUI();
+
+void drawBrakeCalibration();
+
+void drawScreensaver();
+
+void drawDriverScreen();
 
 void initUI();
 

@@ -1,13 +1,7 @@
 #include <gui.h>
 
-// Error list
-String criticalErrors[] = {"N/A",
-                      "AMS Fault", 
-                      "Brake Implausibility",
-                      "SDC Open",
-                      "Inverter Silent",
-                      "APPS Silent",
-                      "Fault Codes Blinking"};
+
+#define MAX_TORQUE 230 // Nm
 
 TFT_eSPI tft = TFT_eSPI();
 
@@ -18,8 +12,8 @@ void screensaver(){
   tft.drawXBitmap(240-logo_width/2, 160-logo_height/2, logo, logo_width, logo_height, TFT_BLACK);
 }
 
-void clearScreen(){
-  tft.fillScreen(TFT_BLACK);
+void clearScreen(uint16_t color){
+  tft.fillScreen(color);
 }
 
 void drawInverterStatus(){
@@ -91,10 +85,24 @@ void drawVsmStatus(){
 void drawMiddleStatus(){
   tft.setTextSize(3);
   tft.setTextDatum(BL_DATUM);
+  
+  u16_t bg_color = TFT_BLACK;
+  u16_t lv_color = TFT_GREEN;
+  if(sharedLowVoltageState < 1150){
+    bg_color = TFT_ORANGE;
+    lv_color = TFT_RED;
+  }
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  tft.fillRect(0, SCREEN_HEIGHT/5*1, SCREEN_WIDTH/2, SCREEN_HEIGHT/10*3, TFT_BLACK);
-  tft.drawString("SOC: "+String(sharedSoc)+"%",18, SCREEN_HEIGHT/5*1+45);
-  tft.drawString("TS DC: "+String(sharedDcVoltage)+"V", 18, SCREEN_HEIGHT/5*2+20);
+  tft.fillRect(0, SCREEN_HEIGHT/5*1, SCREEN_WIDTH, SCREEN_HEIGHT/10*3, TFT_BLACK);
+  tft.drawString("SOC: "+String(sharedSoc)+"%",18, SCREEN_HEIGHT/5+45);
+  tft.drawString("TS: "+String(sharedDcVoltage)+"V", 18, SCREEN_HEIGHT/5*2+20);
+
+  tft.setTextColor(lv_color, bg_color);
+  tft.drawString("LV: "+String(((float) sharedLowVoltageState) / 100.0)+"V", SCREEN_WIDTH/2+18, SCREEN_HEIGHT/5+45);
+  // TODO: Add red text for temperature warning
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.drawString("TSTMP: "+String(sharedPackTemp) + "C", SCREEN_WIDTH/2+18, SCREEN_HEIGHT/5*2+20);
+
   tft.setTextColor(TFT_RED, TFT_BLACK);
   tft.setTextDatum(TL_DATUM);
   tft.setTextSize(2);
@@ -112,33 +120,96 @@ void drawMiddleStatus(){
   tft.setTextDatum(BL_DATUM);
 }
 
+void drawScreensaver() {
+  if(updateScreensaver){
+    screensaver();
+    updateScreensaver = false;
+  }
+  readyForData = true;
+  
+}
+
+void drawDriverScreen(){
+  u16_t bg_color = TFT_BLACK;
+  if(criticalError > 0){
+    updateDriverStatus = true;
+    if(blink) {
+      bg_color = TFT_RED;
+    }
+    
+  }
+  if(updateDriverStatus){
+    
+
+    if(criticalError > 0){
+      clearScreen(bg_color);
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.setTextSize(3);
+      tft.setTextDatum(MC_DATUM);
+      tft.drawString(criticalErrors[criticalError], SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+      tft.setTextDatum(BL_DATUM);
+    }else{
+      if(sharedUpdateMiddleStatus){
+        tft.fillRect(SCREEN_WIDTH/10, SCREEN_HEIGHT/6, SCREEN_WIDTH/10 * 8, SCREEN_HEIGHT/3, TFT_BLACK);
+      }
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.setTextSize(8);
+      tft.setTextDatum(MC_DATUM);
+      tft.drawString("SOC: " + String(sharedSoc) + "%", SCREEN_WIDTH/2, SCREEN_HEIGHT/3);
+      
+
+      if(sharedUpdateBottomStatus){
+        tft.fillRect(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 8 * 5, SCREEN_WIDTH / 10 * 8, SCREEN_HEIGHT / 4, TFT_DARKGREY);
+      }
+      // Oh God
+      tft.setTextSize(3);
+      tft.drawString("Torque Feedback:", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 25);
+      tft.fillRect(SCREEN_WIDTH / 10 + 10, SCREEN_HEIGHT / 8 * 5 + 10, ((SCREEN_WIDTH / 10 * 8) - 20) / (MAX_TORQUE / packPower), SCREEN_HEIGHT / 4 - 20, TFT_GREEN);
+      tft.setTextDatum(BL_DATUM);
+    }
+
+  }
+  readyForData = true;
+}
+
 
 void drawUI(){
-  // No need to update the whole screen for everything, and risking blinky graphics.
+  // No need to sharedUpdate the whole screen for everything, and risking blinky graphics.
   if(readyForData) return;
+  if(currentScreen == 0) {
+    drawScreensaver();
+    return;
+  }
 
-  if(updateTopStatus){
+  if(currentScreen == 1){
+    drawDriverScreen();
+    return;
+  }
+
+  if(sharedUpdateTopStatus){
     tft.fillRect(5,5, SCREEN_WIDTH-10, SCREEN_HEIGHT/5-10, TFT_BLACK);
     tft.drawRect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT/5, TFT_ALIGN);
     drawInverterStatus();
-    updateTopStatus = false;
+    sharedUpdateTopStatus = false;
   }
 
-  if(updateMiddleStatus){
+  if(sharedUpdateMiddleStatus){
     drawMiddleStatus();
-    updateMiddleStatus = false;
+    sharedUpdateMiddleStatus = false;
   }
 
-  if(updateBottomStatus){
+  if(sharedUpdateBottomStatus){
     tft.fillRect(0, SCREEN_HEIGHT/5 * 4, SCREEN_WIDTH, SCREEN_HEIGHT/5, TFT_BLACK);
     drawVsmStatus();
-    updateBottomStatus = false;
+    sharedUpdateBottomStatus = false;
     drawR2DStatus();
     drawSDCStatus();
   }
   readyForData = true;
  
 }
+
+
 
 void initUI(){
     // Configuring screen
