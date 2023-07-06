@@ -1,3 +1,0 @@
-cargo:rustc-link-search=C:\Users\haava\Desktop\skole\align\Dashbord\VirtualBox\dashboard\target\thumbv6m-none-eabi\release\build\rp2040-pac-dfe9730b78787b98\out
-cargo:rerun-if-changed=device.x
-cargo:rerun-if-changed=build.rs

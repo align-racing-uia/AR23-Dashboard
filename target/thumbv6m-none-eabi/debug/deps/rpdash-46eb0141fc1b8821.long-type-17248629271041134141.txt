@@ -1,1 +1,0 @@
-SPIInterface<rp_pico::rp2040_hal::Spi<rp_pico::rp2040_hal::spi::Enabled, SPI0, 8>, rp_pico::rp2040_hal::gpio::Pin<Gpio6, rp_pico::rp2040_hal::gpio::Function<rp_pico::rp2040_hal::gpio::I2C>>, rp_pico::rp2040_hal::gpio::Pin<Gpio5, rp_pico::rp2040_hal::gpio::Output<rp_pico::rp2040_hal::gpio::PushPull>>>

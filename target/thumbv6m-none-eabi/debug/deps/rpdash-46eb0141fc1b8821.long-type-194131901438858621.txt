@@ -1,1 +1,0 @@
-mipidsi::Display<SPIInterface<rp_pico::rp2040_hal::Spi<rp_pico::rp2040_hal::spi::Enabled, SPI0, 8>, rp_pico::rp2040_hal::gpio::Pin<Gpio6, rp_pico::rp2040_hal::gpio::Output<rp_pico::rp2040_hal::gpio::PushPull>>, rp_pico::rp2040_hal::gpio::Pin<Gpio5, rp_pico::rp2040_hal::gpio::Output<rp_pico::rp2040_hal::gpio::PushPull>>>, ILI9486Rgb666, DynPin>

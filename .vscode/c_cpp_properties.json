@@ -8,12 +8,12 @@
         {
             "name": "PlatformIO",
             "includePath": [
-                "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/include",
-                "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/src",
+                "C:/Users/haava/Desktop/dashboard/include",
+                "C:/Users/haava/Desktop/dashboard/src",
                 "C:/Users/haava/.platformio/packages/framework-arduinopico/libraries/FreeRTOS/src",
-                "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/.pio/libdeps/pico/TFT_eSPI",
+                "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/TFT_eSPI",
                 "C:/Users/haava/.platformio/packages/framework-arduinopico/libraries/LittleFS/src",
-                "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/.pio/libdeps/pico/mcp_can",
+                "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/mcp_can",
                 "C:/Users/haava/.platformio/packages/framework-arduinopico/libraries/SPI/src",
                 "C:/Users/haava/.platformio/packages/framework-arduinopico/cores/rp2040",
                 "C:/Users/haava/.platformio/packages/framework-arduinopico/cores/rp2040/api/deprecated",
@@ -69,12 +69,12 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
-                    "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/include",
-                    "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/src",
+                    "C:/Users/haava/Desktop/dashboard/include",
+                    "C:/Users/haava/Desktop/dashboard/src",
                     "C:/Users/haava/.platformio/packages/framework-arduinopico/libraries/FreeRTOS/src",
-                    "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/.pio/libdeps/pico/TFT_eSPI",
+                    "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/TFT_eSPI",
                     "C:/Users/haava/.platformio/packages/framework-arduinopico/libraries/LittleFS/src",
-                    "c:/Users/haava/Desktop/skole/align/Dashbord/VirtualBox/dashboard/.pio/libdeps/pico/mcp_can",
+                    "C:/Users/haava/Desktop/dashboard/.pio/libdeps/pico/mcp_can",
                     "C:/Users/haava/.platformio/packages/framework-arduinopico/libraries/SPI/src",
                     "C:/Users/haava/.platformio/packages/framework-arduinopico/cores/rp2040",
                     "C:/Users/haava/.platformio/packages/framework-arduinopico/cores/rp2040/api/deprecated",
@@ -129,7 +129,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60107",
+                "PLATFORMIO=60108",
                 "ARDUINO_RASPBERRY_PI_PICO",
                 "ARDUINO_ARCH_RP2040",
                 "USBD_MAX_POWER_MA=250",
@@ -156,15 +156,15 @@
                 "ARDUINO_VARIANT=\"rpipico\"",
                 ""
             ],
-            "cStandard": "c17",
-            "cppStandard": "c++17",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
             "compilerPath": "C:/Users/haava/.platformio/packages/toolchain-rp2040-earlephilhower/bin/arm-none-eabi-gcc.exe",
             "compilerArgs": [
                 "-march=armv6-m",
                 "-mcpu=cortex-m0plus",
                 "-mthumb",
-                "-iprefixC:/Users/haava/.platformio/packages/framework-arduinopico",
-                "@C:/Users/haava/.platformio/packages/framework-arduinopico/lib/platform_inc.txt",
+                "-iprefixC:Usershaava.platformiopackagesframework-arduinopico",
+                "@C:Usershaava.platformiopackagesframework-arduinopicolibplatform_inc.txt",
                 ""
             ]
         }
