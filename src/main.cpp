@@ -41,6 +41,7 @@ Written for Align Racing, for use in the dashboard of AR23.
 #define PIN_R2D 14
 
 bool btn1_toggled = false;
+bool btn2_toggled = false;
 
 void setup(void) {
   Serial.begin(9600);
@@ -73,8 +74,13 @@ void loop() {
   checkForFaults();
   drawUI();
   //Resetting fault codes can be practical during testing
-  if(btn2){
+  if(btn2 && !btn2_toggled){
     resetFaultCodes();
+    btn2_toggled = true;
+  }
+
+  if(!btn2){
+    btn2_toggled = false;
   }
 
   blinkingTimestamp = millis();

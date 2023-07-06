@@ -150,22 +150,15 @@ void drawDriverScreen(){
       tft.setTextDatum(BL_DATUM);
     }else{
       if(sharedUpdateMiddleStatus){
-        tft.fillRect(SCREEN_WIDTH/10, SCREEN_HEIGHT/6, SCREEN_WIDTH/10 * 8, SCREEN_HEIGHT/3, TFT_BLACK);
+        tft.fillRect(SCREEN_WIDTH/10, SCREEN_HEIGHT/6, SCREEN_WIDTH/10 * 8, SCREEN_HEIGHT/3*2, TFT_BLACK);
       }
       tft.setTextColor(TFT_GREEN, TFT_BLACK);
       tft.setTextSize(8);
       tft.setTextDatum(MC_DATUM);
       tft.drawString("SOC: " + String(sharedSoc) + "%", SCREEN_WIDTH/2, SCREEN_HEIGHT/3);
-      
-
-      if(sharedUpdateBottomStatus){
-        tft.fillRect(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 8 * 5, SCREEN_WIDTH / 10 * 8, SCREEN_HEIGHT / 4, TFT_DARKGREY);
-      }
-      // Oh God
-      tft.setTextSize(3);
-      tft.drawString("Torque Feedback:", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 25);
-      tft.fillRect(SCREEN_WIDTH / 10 + 10, SCREEN_HEIGHT / 8 * 5 + 10, ((SCREEN_WIDTH / 10 * 8) - 20) / (MAX_TORQUE / packPower), SCREEN_HEIGHT / 4 - 20, TFT_GREEN);
+      tft.drawString("TRQ: " + String(sharedCommandedTorque) + "Nm", SCREEN_WIDTH/2, SCREEN_HEIGHT/3 * 2);
       tft.setTextDatum(BL_DATUM);
+
     }
 
   }
@@ -199,7 +192,7 @@ void drawUI(){
   }
 
   if(sharedUpdateBottomStatus){
-    tft.fillRect(0, SCREEN_HEIGHT/5 * 4, SCREEN_WIDTH, SCREEN_HEIGHT/5, TFT_BLACK);
+    tft.fillRect(0, SCREEN_HEIGHT/5 * 4, SCREEN_WIDTH/6 * 5, SCREEN_HEIGHT/5, TFT_BLACK);
     drawVsmStatus();
     sharedUpdateBottomStatus = false;
     drawR2DStatus();

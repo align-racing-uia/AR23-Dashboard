@@ -11,7 +11,8 @@ String criticalErrors[] = {"N/A",
                       "APPS Silent",
                       "Fault Codes Blinking",
                       "Low System Voltage!!!",
-                      "BMS Silent"};
+                      "BMS Silent",
+                      "Deviation Error"};
 
 // Should be simplified, but will probably not run much during a single session
 void mapRunFault(){
@@ -108,6 +109,11 @@ void checkForFaults(){
       updateTopStatus = criticalError != 7;
       updateMiddleStatus = criticalError != 7;
       criticalError = 7; 
+    }
+
+    if(sharedDeviationState){
+      updateTopStatus = criticalError != 9;
+      criticalError = 9;
     }
   }
 }

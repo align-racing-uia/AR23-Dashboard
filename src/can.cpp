@@ -11,10 +11,12 @@ void canUpdate(){
   if(!readyForData) return;
   sharedDcVoltage = dcVoltage;
   sharedInverterState = inverterState;
+  sharedCommandedTorque = commandedTorque;
   sharedSoc = soc;
   sharedR2DState = r2dState;
   sharedSdcState = sdcState;
   sharedVsmState = vsmState;
+  sharedDeviationState = deviationState;
   sharedPackTemp = packTemp;
   sharedPackPower = packPower;
   readyForData = false;
@@ -22,6 +24,7 @@ void canUpdate(){
   sharedUpdateBottomStatus = updateBottomStatus;
   sharedUpdateMiddleStatus = updateMiddleStatus;
   sharedUpdateTopStatus = updateTopStatus;
+  sharedUpdateDriverStatus = updateDriverStatus;
   for(int i=0; i<4; i++){
     sharedInverterPostFaultCode[i] = inverterPostFaultCode[i];
     sharedInverterRunFaultCode[i] = inverterRunFaultCode[i];
@@ -68,7 +71,7 @@ void canRx(){
       packPower = rxBuf[3] << 8;
       packPower |= rxBuf[2];
       packPower /= 10;
-      updateBottomStatus = updateBottomStatus || packPower != oldState;
+      // updateBottomStatus = updateBottomStatus || packPower != oldState;
 
       break;
 
@@ -107,6 +110,11 @@ void canRx(){
       break;
 
     case 0x0E1:
+      oldState = deviationState;
+      deviationState = 0x1 & rxBuf[3];
+      // Handled in faults.cpp
+      //updateBottomStatus = updateBottomStatus || oldState != deviationState;
+
       oldState = r2dState;
       r2dState = 0x2 & rxBuf[3];
       updateBottomStatus = updateBottomStatus || oldState != r2dState;
@@ -115,6 +123,14 @@ void canRx(){
       sdcState = 0x8 & rxBuf[3];
       updateBottomStatus = updateBottomStatus || oldState != sdcState;
       appsTimestamp = millis();
+      break;
+
+    case 0x0C0:
+      oldState = commandedTorque;
+      commandedTorque = rxBuf[1] << 8;
+      commandedTorque |= rxBuf[0];
+      updateDriverStatus = updateDriverStatus || oldState != commandedTorque;
+      updateBottomStatus = updateDriverStatus || updateBottomStatus;
       break;
 
     default:
@@ -168,7 +184,7 @@ void canInit(){
     CAN0.init_Mask(1, 0x06FF0000);
     CAN0.init_Filt(2, 0x06B00000); //- Owned by mask 1
     CAN0.init_Filt(3, 0x06B10000); //-
-    CAN0.init_Filt(4, 0x06B00000); //-
+    CAN0.init_Filt(4, 0x00C00000); //-
     CAN0.init_Filt(5, 0x06B00000); //-
 
 

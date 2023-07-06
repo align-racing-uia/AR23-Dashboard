@@ -14,6 +14,7 @@ extern int currentScreen;
 // Apps based states
 extern bool r2dState;
 extern bool sdcState;
+extern bool deviationState;
 
 // Internal states
 extern int criticalError;
@@ -34,6 +35,7 @@ extern bool activePostFault;
 extern String currentRunFault;
 extern bool activeRunFault;
 extern int lowVoltageState;
+extern int commandedTorque;
 
 
 

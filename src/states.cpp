@@ -12,6 +12,7 @@ int currentScreen = 0;
 // Apps based states
 bool r2dState = false;
 bool sdcState = false;
+bool deviationState = false;
 
 // Internal states
 int criticalError = 0;
@@ -32,6 +33,7 @@ bool activePostFault = false;
 String currentRunFault = "";
 bool activeRunFault = false;
 int lowVoltageState = 1200;
+int commandedTorque = 0;
 
 
 
