@@ -7,7 +7,6 @@ Written for Align Racing, for use in the dashboard of AR23.
 
 // Duh
 #include <Arduino.h>
-#include <FreeRTOS.h>
 #include <pins_arduino_override.h>
 // Timestamps and states
 #include <states.h>
