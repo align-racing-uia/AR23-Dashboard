@@ -150,12 +150,16 @@ void drawDriverScreen(){
       tft.setTextDatum(BL_DATUM);
     }else{
       if(sharedUpdateMiddleStatus){
-        tft.fillRect(SCREEN_WIDTH/10, SCREEN_HEIGHT/6, SCREEN_WIDTH/10 * 8, SCREEN_HEIGHT/3*2, TFT_BLACK);
+        tft.fillRect(SCREEN_WIDTH/10, SCREEN_HEIGHT/6, SCREEN_WIDTH/10 * 8, SCREEN_HEIGHT/3, TFT_BLACK);
       }
       tft.setTextColor(TFT_GREEN, TFT_BLACK);
       tft.setTextSize(8);
       tft.setTextDatum(MC_DATUM);
       tft.drawString("SOC: " + String(sharedSoc) + "%", SCREEN_WIDTH/2, SCREEN_HEIGHT/3);
+
+      if(sharedUpdateBottomStatus){
+        tft.fillRect(SCREEN_WIDTH/10, SCREEN_HEIGHT / 2, SCREEN_WIDTH/10*8, SCREEN_HEIGHT/3);
+      }
       tft.drawString("TRQ: " + String(sharedCommandedTorque) + "Nm", SCREEN_WIDTH/2, SCREEN_HEIGHT/3 * 2);
       tft.setTextDatum(BL_DATUM);
 
